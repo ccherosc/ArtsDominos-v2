@@ -181,6 +181,12 @@ InputEvents.onBoardTap = function(tileId) {
   _handleMoveResult(result);
 };
 
+InputEvents.onPassRequest = function() {
+  if (state && state.status === 'playing' && state.players[state.currentPlayer].isHuman) {
+    GameUI.playerPass();
+  }
+};
+
 // ── UI refresh ───────────────────────────────────────
 
 function _refreshUI() {
@@ -188,7 +194,9 @@ function _refreshUI() {
   document.getElementById('your-score').textContent    = state.matchScores[0];
   document.getElementById('opp-score').textContent     = state.matchScores[1] || 0;
   document.getElementById('your-hand-count').textContent = state.hands[0].length;
-  document.getElementById('opp-hand-count').textContent  = state.hands[1]?.length || 0;
+  const oppCount  = state.hands[1]?.length || 0;
+  const oppBadge  = document.getElementById('opp-hand-count');
+  if (oppBadge) { oppBadge.textContent = oppCount; oppBadge.classList.toggle('low-tiles', oppCount > 0 && oppCount <= 3); }
   document.getElementById('boneyard-count').textContent  = state.boneyard.length;
   document.getElementById('round-num').textContent = `Round ${state.roundNumber}`;
 
@@ -214,6 +222,7 @@ function _refreshPassButton() {
   const canPass = state.players[state.currentPlayer].isHuman &&
                   !Engine.hasAnyValidMove(state, 0);
   btn.disabled = !canPass;
+  btn.classList.toggle('must-pass', canPass);
 }
 
 // ── Round / match results ────────────────────────────

@@ -14,14 +14,19 @@ const Input = (() => {
   let _handContainer  = null;
   let _dragGhost      = null;
 
-  const MIN_PAN_DIST  = 14;  // px before a move becomes a pan
-  const MIN_DRAG_DIST = 10;  // px before a hand-tile move becomes a drag
+  const MIN_PAN_DIST  = 14;
+  const MIN_DRAG_DIST = 10;
 
-  // Board pointer tracking (supports multi-touch pinch)
-  let _boardPointers  = new Map(); // pointerId → { x, y }
+  // Board pointer tracking
+  let _boardPointers  = new Map();
   let _panStart       = null;
   let _panMoved       = false;
   let _lastPinchDist  = null;
+
+  // Double-tap detection
+  let _lastTapTime = 0;
+  let _lastTapX    = 0;
+  let _lastTapY    = 0;
 
   // Hand drag tracking
   let _dragTileId     = null;
@@ -101,8 +106,25 @@ const Input = (() => {
     if (_boardPointers.size < 2) _lastPinchDist = null;
 
     if (wasOnly && _boardPointers.size === 0) {
-      if (!_panMoved && _panStart && _selectedTileId) {
-        InputEvents.onBoardTap(_selectedTileId, e);
+      if (!_panMoved && _panStart) {
+        const now = Date.now();
+        const ddx = e.clientX - _lastTapX;
+        const ddy = e.clientY - _lastTapY;
+        const isDoubleTap = (now - _lastTapTime < 320) && Math.hypot(ddx, ddy) < 44;
+
+        if (isDoubleTap && !_selectedTileId) {
+          // Double-tap with no tile selected = re-fit view
+          if (window._gameState) {
+            Render.fitChain(window._gameState);
+            Render.drawBoard(window._gameState);
+          }
+        } else if (_selectedTileId) {
+          InputEvents.onBoardTap(_selectedTileId, e);
+        }
+
+        _lastTapTime = now;
+        _lastTapX    = e.clientX;
+        _lastTapY    = e.clientY;
       }
       _cancelBoard();
     }
@@ -224,6 +246,10 @@ const Input = (() => {
       _selectedTileId = null;
       InputEvents.onTileDeselect();
     }
+    if (e.key === ' ') {
+      e.preventDefault();
+      InputEvents.onPassRequest();
+    }
   });
 
   // ── Public API ─────────────────────────────────────
@@ -243,4 +269,5 @@ const InputEvents = {
   onTileSelect(tileId)  { /* overridden by game.js */ },
   onTileDeselect()      { /* overridden by game.js */ },
   onBoardTap(tileId, e) { /* overridden by game.js */ },
+  onPassRequest()       { /* overridden by game.js */ },
 };
