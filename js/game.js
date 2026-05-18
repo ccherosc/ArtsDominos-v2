@@ -126,7 +126,8 @@ InputEvents.onTileSelect = function(tileId) {
   if (!tile) return;
 
   const validEnds = Engine.getValidEnds(state, tile);
-  const validMap  = validEnds.length > 0 ? new Set([tileId]) : new Set();
+  const validMap  = new Map();
+  if (validEnds.length > 0) validMap.set(tileId, new Set(validEnds));
 
   Render.renderHandTiles(state.hands[0], validMap, tileId);
 
@@ -145,7 +146,7 @@ InputEvents.onTileSelect = function(tileId) {
 InputEvents.onTileDeselect = function() {
   Input.clearSelection();
   _hideEndPicker();
-  Render.renderHandTiles(state.hands[0], null, null);
+  _refreshHand();
   _updateIdleHint();
 };
 
@@ -153,9 +154,9 @@ function _updateIdleHint() {
   const hint = document.getElementById('board-hint');
   if (!hint) return;
   if (state.board.length > 0 && state.leftEnd !== null) {
-    hint.textContent = `Play to ◀ ${state.leftEnd} or ${state.rightEnd} ▶ — tap a tile`;
+    hint.textContent = `Green = ◀ ${state.leftEnd}  ·  Blue = ${state.rightEnd} ▶  ·  Gold = either — tap a tile`;
   } else {
-    hint.textContent = 'Tap a tile in your hand to select it';
+    hint.textContent = 'Tap your opening double to begin';
   }
 }
 
@@ -210,9 +211,11 @@ function _refreshUI() {
 }
 
 function _refreshHand() {
-  const validMap = new Set(
-    Engine.getValidMovesForPlayer(state, 0).map(m => m.tile.id)
-  );
+  const validMap = new Map();
+  Engine.getValidMovesForPlayer(state, 0).forEach(({ tile, end }) => {
+    if (!validMap.has(tile.id)) validMap.set(tile.id, new Set());
+    validMap.get(tile.id).add(end);
+  });
   Render.renderHandTiles(state.hands[0], validMap, Input.getSelectedTileId());
 }
 
@@ -242,23 +245,29 @@ function _showResult(result) {
     setTimeout(() => won ? Sound.win() : Sound.lose(), 300);
 
     // Running record vs this opponent (already updated above)
-    const rec = opp ? Storage.getRecord(opp.id) : null;
-    const recStr = rec ? `  ·  vs ${opp.name}: ${rec.wins}W – ${rec.losses}L` : '';
+    const rec     = opp ? Storage.getRecord(opp.id) : null;
+    const streak  = rec ? (rec.streak || 0) : 0;
+    const recStr  = rec ? `  ·  ${opp.name}: ${rec.wins}W – ${rec.losses}L` : '';
+    const streakStr = won && streak >= 2
+      ? `  ·  ${streak} wins in a row!`
+      : (!won && rec && rec.bestStreak >= 2 && streak === 0 ? `  ·  streak ended at ${rec.bestStreak}` : '');
 
-    document.getElementById('match-result-icon').textContent  = won ? '🏆' : '😔';
-    document.getElementById('match-result-title').textContent = won ? 'You Win the Match!' : 'You Lost the Match';
-    document.getElementById('match-result-detail').textContent = Scoring.roundResultText(state, result);
-    document.getElementById('match-result-scores').textContent =
+    document.getElementById('match-result-icon').textContent     = won ? '🏆' : '😔';
+    document.getElementById('match-result-title').textContent    = won ? 'You Win the Match!' : 'You Lost the Match';
+    document.getElementById('match-result-detail').textContent   = Scoring.roundResultText(state, result) + streakStr;
+    document.getElementById('match-result-breakdown').textContent = Scoring.pipBreakdownText(state, result);
+    document.getElementById('match-result-scores').textContent   =
       `You: ${state.matchScores[0]} pts · ${state.players[1]?.name}: ${state.matchScores[1] || 0} pts${recStr}`;
     document.getElementById('match-over-overlay').classList.remove('hidden');
 
   } else {
     const won = result.roundWinner === 0;
     setTimeout(() => won ? Sound.roundWin() : Sound.pass(), 200);
-    document.getElementById('result-icon').textContent  = won ? '🎉' : '😤';
-    document.getElementById('result-title').textContent = won ? 'Round Won!' : 'Round Lost';
-    document.getElementById('result-detail').textContent = Scoring.roundResultText(state, result);
-    document.getElementById('result-scores').textContent =
+    document.getElementById('result-icon').textContent      = won ? '🎉' : '😤';
+    document.getElementById('result-title').textContent     = won ? 'Round Won!' : 'Round Lost';
+    document.getElementById('result-detail').textContent    = Scoring.roundResultText(state, result);
+    document.getElementById('result-breakdown').textContent = Scoring.pipBreakdownText(state, result);
+    document.getElementById('result-scores').textContent    =
       `Match Score — You: ${state.matchScores[0]} · ${state.players[1]?.name}: ${state.matchScores[1] || 0}`;
 
     const nextBtn = document.getElementById('result-next-btn');

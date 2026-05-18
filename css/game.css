@@ -354,16 +354,41 @@
     0 0 14px rgba(201,168,76,0.5);
 }
 
+/* Opening double — generic green (no board ends yet) */
 .hand-tile.valid-move {
-  border-color: #4CAF50;
-  box-shadow:
-    0 4px 12px rgba(0,0,0,0.5),
-    0 0 10px rgba(76,175,80,0.4);
+  border-color: #66BB6A;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 10px rgba(102,187,106,0.45);
+}
+
+/* Left-end match — green */
+.hand-tile.valid-left {
+  border-color: #66BB6A;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 10px rgba(102,187,106,0.45);
+}
+
+/* Right-end match — sky blue */
+.hand-tile.valid-right {
+  border-color: #29B6F6;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 10px rgba(41,182,246,0.45);
+}
+
+/* Matches both ends — gold (flexible play) */
+.hand-tile.valid-both {
+  border-color: var(--gold);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 12px rgba(201,168,76,0.55);
 }
 
 .hand-tile.no-move {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.hand-tile.reordering {
+  opacity: 0.72;
+  transform: translateY(-6px) scale(1.08);
+  transition: none;
+  z-index: 10;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.65);
 }
 
 /* ===== HAND ACTIONS ===== */
@@ -517,6 +542,24 @@
   font-size: 0.9rem;
   color: var(--text-light);
   line-height: 1.5;
+}
+
+.result-breakdown {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: 'Lato', monospace;
+  white-space: pre-line;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  padding: 4px 8px;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--r-sm);
+  width: 100%;
+  text-align: left;
+}
+
+.result-breakdown:empty {
+  display: none;
 }
 
 .result-scores {

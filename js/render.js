@@ -289,6 +289,7 @@ const Render = (() => {
     });
 
     // Add / update tiles
+    // validMoveMap: Map<tileId, Set<end>> — end is 'left' | 'right' | 'first'
     hand.forEach(tile => {
       let el = container.querySelector(`[data-tile-id="${tile.id}"]`);
       if (!el) {
@@ -296,13 +297,21 @@ const Render = (() => {
         container.appendChild(el);
       }
 
-      const isSelected = tile.id === selectedTileId;
-      const isValid    = validMoveMap ? validMoveMap.has(tile.id) : false;
-      const isInvalid  = validMoveMap ? !isValid : false;
+      const isSelected  = tile.id === selectedTileId;
+      const ends        = validMoveMap ? validMoveMap.get(tile.id) : null;
+      const isValid     = !!ends;
+      const isInvalid   = validMoveMap ? !isValid : false;
+      const matchLeft   = ends && ends.has('left');
+      const matchRight  = ends && ends.has('right');
+      const matchBoth   = matchLeft && matchRight;
+      const matchFirst  = ends && ends.has('first');
 
-      el.classList.toggle('selected',   isSelected);
-      el.classList.toggle('valid-move', isValid && !isSelected);
-      el.classList.toggle('no-move',    isInvalid && !isSelected);
+      el.classList.toggle('selected',    isSelected);
+      el.classList.toggle('valid-left',  !isSelected && matchLeft  && !matchBoth);
+      el.classList.toggle('valid-right', !isSelected && matchRight && !matchBoth);
+      el.classList.toggle('valid-both',  !isSelected && matchBoth);
+      el.classList.toggle('valid-move',  !isSelected && isValid && (matchFirst || (!matchLeft && !matchRight)));
+      el.classList.toggle('no-move',     !isSelected && isInvalid);
       el.setAttribute('aria-label', `Domino ${tile.a}|${tile.b}${isValid ? ', valid move' : ''}`);
     });
   }

@@ -246,6 +246,70 @@ const App = {
     }
   },
 
+  // ── Stats screen ───────────────────────────────────
+  showStats() {
+    const records = Storage.getAllRecords();
+    let totalWins = 0, totalLosses = 0, bestStreak = 0, bestStreakChar = null;
+
+    CHARACTERS.forEach(char => {
+      const rec = records[char.id];
+      if (rec) {
+        totalWins   += rec.wins   || 0;
+        totalLosses += rec.losses || 0;
+        if ((rec.bestStreak || 0) > bestStreak) {
+          bestStreak = rec.bestStreak;
+          bestStreakChar = char;
+        }
+      }
+    });
+
+    const totalGames = totalWins + totalLosses;
+    const winRate    = totalGames > 0 ? Math.round(totalWins / totalGames * 100) : null;
+
+    const played   = CHARACTERS.filter(c => records[c.id] && (records[c.id].wins + records[c.id].losses) > 0);
+    const unplayed = CHARACTERS.filter(c => !records[c.id] || (records[c.id].wins + records[c.id].losses) === 0);
+
+    const rowHTML = char => {
+      const rec   = records[char.id] || { wins: 0, losses: 0, bestStreak: 0 };
+      const games = (rec.wins || 0) + (rec.losses || 0);
+      const pct   = games > 0 ? Math.round((rec.wins || 0) / games * 100) : null;
+      const streak = rec.bestStreak || 0;
+      return `<div class="stats-char-row">
+        <img class="stats-portrait" src="assets/characters/${char.portraitFile}"
+             onerror="this.src='assets/characters/silhouette.svg'" alt="${char.name}">
+        <div class="stats-char-info">
+          <div class="stats-char-name">${char.name}</div>
+          <div class="stats-char-record">${games === 0 ? 'Not yet played'
+            : `${rec.wins}W &middot; ${rec.losses}L${pct !== null ? ` &middot; ${pct}%` : ''}`}</div>
+        </div>
+        <div class="stats-streak">${streak > 0 ? `&#9733; ${streak}` : '&mdash;'}</div>
+      </div>`;
+    };
+
+    document.getElementById('stats-content').innerHTML = `
+      <div class="stats-summary">
+        <div class="stats-stat">
+          <div class="stats-value">${totalGames}</div>
+          <div class="stats-label">Matches</div>
+        </div>
+        <div class="stats-stat">
+          <div class="stats-value">${winRate !== null ? winRate + '%' : '&mdash;'}</div>
+          <div class="stats-label">Win Rate</div>
+        </div>
+        <div class="stats-stat">
+          <div class="stats-value">${bestStreak > 0 ? bestStreak : '&mdash;'}</div>
+          <div class="stats-label">Best Streak${bestStreakChar ? `<span class="streak-vs">vs ${bestStreakChar.name}</span>` : ''}</div>
+        </div>
+      </div>
+      <div class="gold-rule"></div>
+      ${played.length > 0 ? `<div class="stats-roster">${played.map(rowHTML).join('')}</div>` : ''}
+      ${played.length > 0 && unplayed.length > 0 ? '<div class="stats-section-label">Not Yet Played</div>' : ''}
+      ${unplayed.length > 0 ? `<div class="stats-roster unplayed">${unplayed.map(rowHTML).join('')}</div>` : ''}
+      ${totalGames === 0 ? '<p class="stats-empty">No matches played yet. Go challenge an opponent!</p>' : ''}
+    `;
+    this.showScreen('screen-stats');
+  },
+
   // ── Init ───────────────────────────────────────────
   init() {
     // Format buttons

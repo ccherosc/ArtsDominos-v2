@@ -32,6 +32,7 @@ const Input = (() => {
   let _dragTileId     = null;
   let _dragStart      = null;
   let _isDragging     = false;
+  let _isReordering   = false;
 
   // ── Init ───────────────────────────────────────────
 
@@ -164,19 +165,47 @@ const Input = (() => {
   function _onHandMove(e) {
     if (!_dragTileId) return;
     e.preventDefault();
-    const dx = e.clientX - _dragStart.x;
-    const dy = e.clientY - _dragStart.y;
-    if (!_isDragging && Math.hypot(dx, dy) > MIN_DRAG_DIST) {
-      _isDragging = true;
-      _startGhost(_dragTileId);
+    const dx   = e.clientX - _dragStart.x;
+    const dy   = e.clientY - _dragStart.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (!_isDragging && !_isReordering && dist > MIN_DRAG_DIST) {
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Mostly horizontal → reorder within hand
+        _isReordering = true;
+        const tileEl = _handContainer.querySelector(`[data-tile-id="${_dragTileId}"]`);
+        if (tileEl) tileEl.classList.add('reordering');
+      } else {
+        // Mostly vertical → drag to board
+        _isDragging = true;
+        _startGhost(_dragTileId);
+      }
     }
-    if (_isDragging) _moveGhost(e.clientX, e.clientY);
+
+    if (_isReordering) _reorderTile(_dragTileId, e.clientX);
+    else if (_isDragging) _moveGhost(e.clientX, e.clientY);
+  }
+
+  function _reorderTile(tileId, cx) {
+    const el = _handContainer.querySelector(`[data-tile-id="${tileId}"]`);
+    if (!el) return;
+    const siblings = [..._handContainer.children].filter(c => c !== el);
+    let insertBefore = null;
+    for (const sib of siblings) {
+      const rect = sib.getBoundingClientRect();
+      if (cx < rect.left + rect.width / 2) { insertBefore = sib; break; }
+    }
+    if (insertBefore) _handContainer.insertBefore(el, insertBefore);
+    else _handContainer.appendChild(el);
   }
 
   function _onHandUp(e) {
     if (!_dragTileId) return;
 
-    if (_isDragging) {
+    if (_isReordering) {
+      const tileEl = _handContainer.querySelector(`[data-tile-id="${_dragTileId}"]`);
+      if (tileEl) tileEl.classList.remove('reordering');
+    } else if (_isDragging) {
       _stopGhost();
       const boardRect = _canvas.getBoundingClientRect();
       const overBoard = e.clientX >= boardRect.left && e.clientX <= boardRect.right &&
@@ -199,16 +228,22 @@ const Input = (() => {
       }
     }
 
-    _dragTileId = null;
-    _dragStart  = null;
-    _isDragging = false;
+    _dragTileId   = null;
+    _dragStart    = null;
+    _isDragging   = false;
+    _isReordering = false;
   }
 
   function _onHandCancel() {
+    if (_isReordering && _dragTileId) {
+      const tileEl = _handContainer.querySelector(`[data-tile-id="${_dragTileId}"]`);
+      if (tileEl) tileEl.classList.remove('reordering');
+    }
     _stopGhost();
-    _dragTileId = null;
-    _dragStart  = null;
-    _isDragging = false;
+    _dragTileId   = null;
+    _dragStart    = null;
+    _isDragging   = false;
+    _isReordering = false;
   }
 
   // ── Drag ghost ─────────────────────────────────────

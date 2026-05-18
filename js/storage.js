@@ -39,16 +39,23 @@ const Storage = (() => {
 
     recordWin(charId) {
       const all = _load(KEY_RECORDS, {});
-      if (!all[charId]) all[charId] = { wins: 0, losses: 0 };
+      if (!all[charId]) all[charId] = { wins: 0, losses: 0, streak: 0, bestStreak: 0 };
       all[charId].wins++;
+      all[charId].streak = (all[charId].streak || 0) + 1;
+      if (all[charId].streak > (all[charId].bestStreak || 0)) all[charId].bestStreak = all[charId].streak;
       _save(KEY_RECORDS, all);
     },
 
     recordLoss(charId) {
       const all = _load(KEY_RECORDS, {});
-      if (!all[charId]) all[charId] = { wins: 0, losses: 0 };
+      if (!all[charId]) all[charId] = { wins: 0, losses: 0, streak: 0, bestStreak: 0 };
       all[charId].losses++;
+      all[charId].streak = 0;
       _save(KEY_RECORDS, all);
+    },
+
+    getAllRecords() {
+      return _load(KEY_RECORDS, {});
     },
 
     resetProgress() {

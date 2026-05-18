@@ -39,6 +39,7 @@
         <button class="btn-primary" onclick="App.startModeSelect('teams')">Play Teams &middot; 2 vs 2</button>
         <div class="menu-secondary-row">
           <button class="btn-secondary" onclick="App.showScreen('screen-howtoplay')">How to Play</button>
+          <button class="btn-secondary" onclick="App.showStats()">Stats</button>
           <button class="btn-secondary" onclick="App.showScreen('screen-settings')">Settings</button>
         </div>
       </nav>
@@ -151,6 +152,19 @@
           <button class="btn-danger" onclick="App.confirmReset()">Reset</button>
         </div>
         <p class="version-text">ArtsDominos v0.1.0 · Cuban Double-Nine</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: Stats ===== -->
+  <div id="screen-stats" class="screen">
+    <div class="content-container">
+      <div class="screen-header">
+        <button class="btn-back" onclick="App.showScreen('screen-menu')">&#8592; Back</button>
+        <h2>Stats</h2>
+      </div>
+      <div id="stats-content" class="stats-content">
+        <!-- Populated by main.js showStats() -->
       </div>
     </div>
   </div>
