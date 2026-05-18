@@ -10,6 +10,7 @@ const App = {
   selectedFormat: 'rounds',
   selectedOpponent: null,
   selectedPartner: null,
+  profileChar: null,
 
   // ── Screen navigation ──────────────────────────────
   showScreen(id) {
@@ -63,7 +64,7 @@ const App = {
       </div>
       <div class="card-frame-overlay"></div>
       <div class="card-nameplate">
-        <div class="card-name">${char.name === 'TBD' ? 'Coming Soon' : char.name}</div>
+        <div class="card-name">${char.name}</div>
         <div class="card-level-row">
           <span class="diff-badge ${char.difficulty}">${char.difficulty.toUpperCase()}</span>
           <span class="card-level-num">LVL ${char.level}</span>
@@ -87,12 +88,7 @@ const App = {
     document.querySelectorAll('#character-grid .character-card').forEach(c => c.classList.remove('selected'));
     cardEl.classList.add('selected');
     this.selectedOpponent = char;
-
-    if (this.mode === 'teams') {
-      this._showPartnerSelect();
-    } else {
-      this._showMatchOverlay(char);
-    }
+    this._showProfile(char);
   },
 
   _selectPartner(char, cardEl) {
@@ -115,6 +111,80 @@ const App = {
     section.scrollIntoView({ behavior: 'smooth' });
   },
 
+  // ── Profile modal ──────────────────────────────────
+  _showProfile(char) {
+    this.profileChar = char;
+
+    const modal = document.getElementById('profile-modal');
+    if (!modal) return;
+
+    // Portrait
+    const img = document.getElementById('profile-img');
+    img.src = `assets/characters/${char.portraitFile}`;
+    img.alt = char.name;
+    img.onerror = () => { img.src = 'assets/characters/silhouette.svg'; };
+
+    // Identity
+    document.getElementById('profile-name').textContent = char.name;
+
+    const badge = document.getElementById('profile-diff-badge');
+    badge.textContent = char.difficulty.toUpperCase();
+    badge.className = `diff-badge ${char.difficulty}`;
+
+    document.getElementById('profile-level').textContent = `LVL ${char.level}`;
+    document.getElementById('profile-archetype').textContent = `· ${char.archetype}`;
+
+    // Quote
+    document.getElementById('profile-quote').textContent = char.quote;
+
+    // Bio
+    document.getElementById('profile-bio').textContent = char.bio;
+
+    // Playstyle + skills
+    document.getElementById('profile-playstyle').textContent = char.playstyle;
+
+    const skillsList = document.getElementById('profile-skills');
+    skillsList.innerHTML = '';
+    char.skills.forEach(skill => {
+      const li = document.createElement('li');
+      li.textContent = skill;
+      skillsList.appendChild(li);
+    });
+
+    // Special ability
+    document.getElementById('profile-ability-name').textContent = char.specialAbility.name;
+    document.getElementById('profile-ability-desc').textContent = char.specialAbility.description;
+
+    // Weakness
+    document.getElementById('profile-weakness').textContent = char.weakness;
+
+    // Challenge button label
+    document.getElementById('profile-challenge-btn').textContent = `Challenge ${char.name}!`;
+
+    // Scroll card back to top and show
+    const card = modal.querySelector('.profile-card');
+    if (card) card.scrollTop = 0;
+    modal.classList.remove('hidden');
+  },
+
+  closeProfile() {
+    const modal = document.getElementById('profile-modal');
+    if (modal) modal.classList.add('hidden');
+    this.profileChar = null;
+  },
+
+  challengeFromProfile() {
+    const char = this.profileChar;
+    if (!char) return;
+    document.getElementById('profile-modal').classList.add('hidden');
+
+    if (this.mode === 'teams') {
+      this._showPartnerSelect();
+    } else {
+      this._showMatchOverlay(char);
+    }
+  },
+
   // ── Match overlay ──────────────────────────────────
   _showMatchOverlay(opponent) {
     const overlay = document.getElementById('match-overlay');
@@ -123,8 +193,7 @@ const App = {
     const img = document.getElementById('overlay-npc-img');
     img.innerHTML = `<img src="assets/characters/${opponent.portraitFile}" alt="${opponent.name}" onerror="this.src='assets/characters/silhouette.svg'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
 
-    document.getElementById('overlay-npc-name').textContent =
-      opponent.name === 'TBD' ? `Level ${opponent.level}` : opponent.name;
+    document.getElementById('overlay-npc-name').textContent = opponent.name;
 
     const formatLabels = {
       rounds:  'First to Empty Hand',
@@ -201,6 +270,14 @@ const App = {
     // AI speed select
     const aiSelect = document.getElementById('ai-speed');
     if (aiSelect) aiSelect.value = settings.aiSpeed || 'normal';
+
+    // Close profile modal on backdrop click
+    const profileModal = document.getElementById('profile-modal');
+    if (profileModal) {
+      profileModal.addEventListener('click', e => {
+        if (e.target === profileModal) this.closeProfile();
+      });
+    }
 
     this.showScreen('screen-menu');
   },

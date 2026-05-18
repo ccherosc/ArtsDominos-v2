@@ -21,36 +21,29 @@
 
   <!-- ===== SCREEN: Main Menu ===== -->
   <div id="screen-menu" class="screen active">
-    <div class="menu-container">
 
-      <header class="logo-area">
-        <div class="domino-emblem">
-          <div class="emblem-tile left">
-            <div class="emblem-half"><span class="pip"></span><span class="pip"></span></div>
-            <div class="emblem-divider"></div>
-            <div class="emblem-half"><span class="pip"></span></div>
-          </div>
-          <div class="emblem-star">✦</div>
-          <div class="emblem-tile right">
-            <div class="emblem-half"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-            <div class="emblem-divider"></div>
-            <div class="emblem-half"><span class="pip"></span><span class="pip"></span></div>
-          </div>
-        </div>
-        <h1 class="game-title">ArtsDominos</h1>
-        <p class="game-subtitle">Cuban Double-Nine</p>
-        <div class="gold-rule"></div>
-      </header>
+    <div class="menu-hero">
+      <img
+        class="menu-splash-img"
+        src="assets/bg/splash.png"
+        alt="Art's Dominos — Cuban Double-Nine"
+        onerror="this.style.display='none'"
+      >
+      <div class="menu-hero-gradient"></div>
+    </div>
 
+    <div class="menu-footer">
+      <p class="menu-tagline">Strategy &middot; Luck &middot; Heritage</p>
       <nav class="main-nav">
         <button class="btn-primary" onclick="App.startModeSelect('1v1')">Play 1 vs 1</button>
-        <button class="btn-primary" onclick="App.startModeSelect('teams')">Play Teams · 2 vs 2</button>
-        <div class="gold-rule narrow"></div>
-        <button class="btn-secondary" onclick="App.showScreen('screen-howtoplay')">How to Play</button>
-        <button class="btn-secondary" onclick="App.showScreen('screen-settings')">Settings</button>
+        <button class="btn-primary" onclick="App.startModeSelect('teams')">Play Teams &middot; 2 vs 2</button>
+        <div class="menu-secondary-row">
+          <button class="btn-secondary" onclick="App.showScreen('screen-howtoplay')">How to Play</button>
+          <button class="btn-secondary" onclick="App.showScreen('screen-settings')">Settings</button>
+        </div>
       </nav>
-
     </div>
+
   </div>
 
   <!-- ===== SCREEN: Character / Opponent Select ===== -->
@@ -178,6 +171,66 @@
       <div class="overlay-format" id="overlay-format"></div>
       <button class="btn-primary" onclick="App.launchGame()">Let's Play!</button>
       <button class="btn-secondary" onclick="App.cancelOverlay()">Change Opponent</button>
+    </div>
+  </div>
+
+  <!-- ===== Character Profile Modal ===== -->
+  <div id="profile-modal" class="profile-modal hidden">
+    <div class="profile-card">
+
+      <div class="profile-topbar">
+        <button class="btn-back" onclick="App.closeProfile()">&#8592; Back</button>
+      </div>
+
+      <div class="profile-portrait-wrap">
+        <img class="profile-portrait" id="profile-img" src="" alt="">
+        <div class="profile-portrait-frame"></div>
+      </div>
+
+      <div class="profile-identity">
+        <h2 class="profile-name" id="profile-name"></h2>
+        <div class="profile-meta-row">
+          <span id="profile-diff-badge" class="diff-badge"></span>
+          <span class="profile-level" id="profile-level"></span>
+          <span class="profile-archetype" id="profile-archetype"></span>
+        </div>
+      </div>
+
+      <div class="profile-quote-box">
+        <span class="profile-quote-mark">"</span>
+        <span class="profile-quote-text" id="profile-quote"></span>
+        <span class="profile-quote-mark">"</span>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-label">PROFILE</div>
+        <p class="profile-bio" id="profile-bio"></p>
+      </div>
+
+      <div class="profile-section">
+        <div class="profile-section-label">PLAYSTYLE</div>
+        <div class="profile-playstyle-badge" id="profile-playstyle"></div>
+        <ul class="profile-skills" id="profile-skills"></ul>
+      </div>
+
+      <div class="profile-ability-box">
+        <div class="ability-header">
+          <span class="ability-icon">&#9889;</span>
+          <span class="ability-label">SPECIAL ABILITY</span>
+        </div>
+        <div class="ability-name" id="profile-ability-name"></div>
+        <div class="ability-desc" id="profile-ability-desc"></div>
+      </div>
+
+      <div class="profile-section profile-weakness-section">
+        <div class="profile-section-label weakness-label">&#9888; WEAKNESS</div>
+        <p class="profile-weakness-text" id="profile-weakness"></p>
+      </div>
+
+      <div class="profile-challenge-row">
+        <button class="btn-primary challenge-btn" id="profile-challenge-btn" onclick="App.challengeFromProfile()"></button>
+      </div>
+
     </div>
   </div>
 
