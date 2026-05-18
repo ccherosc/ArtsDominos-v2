@@ -135,26 +135,19 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   flex-shrink: 0;
-  padding: 0 var(--gap-xs);
-}
-
-.round-badge {
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  padding: 0 var(--gap-sm);
 }
 
 .turn-indicator {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .turn-arrow {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--gold);
   transition: transform var(--t-fast);
 }
@@ -165,16 +158,18 @@
 
 .turn-name {
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--gold-light);
   font-weight: 700;
   white-space: nowrap;
 }
 
-.format-badge {
-  font-size: 0.58rem;
+.round-badge {
+  font-size: 0.6rem;
   color: var(--text-muted);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* ===== GAME MENU BUTTON ===== */
@@ -293,9 +288,9 @@
 /* ===== PLAYER HAND ===== */
 .hand-area {
   flex-shrink: 0;
-  background: linear-gradient(0deg, rgba(15,6,2,0.98) 0%, rgba(20,10,5,0.92) 100%);
-  border-top: 1px solid rgba(201,168,76,0.3);
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+  background: linear-gradient(0deg, #0a0402 0%, rgba(20,10,5,0.97) 100%);
+  border-top: 2px solid rgba(201,168,76,0.35);
+  box-shadow: 0 -6px 28px rgba(0,0,0,0.6);
   display: flex;
   flex-direction: column;
   min-height: 175px;

@@ -59,8 +59,8 @@ function initGame() {
   }
 
   document.getElementById('format-badge').textContent = {
-    rounds:  'Round Win',
-    points:  'First to 100',
+    rounds:  'Single Round',
+    points:  'First to 100 pts',
     bestof3: 'Best of 3',
   }[state.format] || '';
 
@@ -185,7 +185,7 @@ function _refreshUI() {
   document.getElementById('your-hand-count').textContent = state.hands[0].length;
   document.getElementById('opp-hand-count').textContent  = state.hands[1]?.length || 0;
   document.getElementById('boneyard-count').textContent  = state.boneyard.length;
-  document.getElementById('round-badge').textContent     = `Round ${state.roundNumber}`;
+  document.getElementById('round-num').textContent = `Round ${state.roundNumber}`;
 
   // Turn indicator
   const isYourTurn = state.players[state.currentPlayer].isHuman;
