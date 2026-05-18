@@ -14,7 +14,7 @@ const Input = (() => {
   let _panMoved = false;       // true if pointer moved enough to count as pan
   let _canvas = null;
 
-  const MIN_PAN_DIST = 8;      // px before a drag becomes a pan
+  const MIN_PAN_DIST = 14;     // px before a drag becomes a pan (higher = easier to tap on mobile)
 
   // ── Init ───────────────────────────────────────────
 

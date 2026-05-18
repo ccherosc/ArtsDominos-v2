@@ -60,7 +60,7 @@ const Render = (() => {
     if (state.board.length === 0) {
       _drawEmptyHint();
     } else {
-      _drawChain(state.board);
+      _drawChain(state.board, state.leftEnd, state.rightEnd);
     }
 
     ctx.restore();
@@ -69,23 +69,48 @@ const Render = (() => {
 
   // ── Chain layout ───────────────────────────────────
 
-  function _drawChain(boardTiles) {
-    // Layout tiles left-to-right (horizontal chain, wrapping TBD in Phase 3)
-    let x = -(boardTiles.length * (TILE_W + GAP)) / 2;
+  function _drawChain(boardTiles, leftEndVal, rightEndVal) {
+    // Rebuild spatial order: left-played tiles (reversed) + center + right-played tiles
+    const center     = boardTiles.find(t => t.end === 'center');
+    const leftTiles  = boardTiles.filter(t => t.end === 'left').reverse();
+    const rightTiles = boardTiles.filter(t => t.end === 'right');
+    const ordered    = [...leftTiles, center, ...rightTiles].filter(Boolean);
+
+    const totalW = ordered.length * (TILE_W + GAP) - GAP;
+    let x = -totalW / 2;
     const y = -TILE_H / 2;
 
-    boardTiles.forEach(({ tile, orientation }) => {
-      const horiz = orientation !== 'v';
-      if (horiz) {
-        // Horizontal tile: a-half on left, b-half on right
-        _drawTileH(x, y, tile);
-        x += TILE_W + GAP;
-      } else {
-        // Vertical (double): wider but same footprint, centered
-        _drawTileV(x - (TILE_H - TILE_W) / 2, y - (TILE_H - TILE_W) / 2, tile);
-        x += TILE_W + GAP;
-      }
+    ordered.forEach(({ tile }) => {
+      _drawTileH(x, y, tile);
+      x += TILE_W + GAP;
     });
+
+    // End value badges — show which pip is exposed at each end
+    if (ordered.length > 0 && leftEndVal !== null) {
+      const leftBadgeX  = -totalW / 2 - 18;
+      const rightBadgeX =  totalW / 2 + 18;
+      const badgeY = 0;
+      _drawEndBadge(leftBadgeX,  badgeY, leftEndVal,  '◀');
+      _drawEndBadge(rightBadgeX, badgeY, rightEndVal, '▶');
+    }
+  }
+
+  function _drawEndBadge(cx, cy, pipVal, arrow) {
+    const R = 16;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(201,168,76,0.9)';
+    ctx.fill();
+    ctx.strokeStyle = '#F5E090';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.font = '700 14px Lato, sans-serif';
+    ctx.fillStyle = '#1A0D07';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(pipVal, cx, cy);
+    ctx.restore();
   }
 
   // ── Tile drawing ───────────────────────────────────
@@ -294,8 +319,8 @@ const Render = (() => {
   }
 
   function _createHandTileEl(tile) {
-    const tileW = window.innerWidth < 768 ? 56 : 60;
-    const tileH = window.innerWidth < 768 ? 108 : 116;
+    const tileW = window.innerWidth < 768 ? 52 : 60;
+    const tileH = window.innerWidth < 768 ? 100 : 116;
     const scale = window.devicePixelRatio || 1;
 
     const el = document.createElement('canvas');

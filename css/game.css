@@ -298,8 +298,8 @@
   box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;
-  min-height: 155px;
-  max-height: 195px;
+  min-height: 175px;
+  max-height: 215px;
   z-index: 20;
 }
 
@@ -335,8 +335,8 @@
   cursor: grab;
   transition: transform var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast);
   touch-action: none;
-  width: 56px;
-  height: 108px;
+  width: 52px;
+  height: 100px;
 }
 
 .hand-tile:hover {
@@ -624,12 +624,12 @@
 /* ===== RESPONSIVE ADJUSTMENTS ===== */
 @media (max-height: 700px) {
   .game-topbar  { height: 58px; min-height: 58px; }
-  .hand-area    { min-height: 130px; max-height: 165px; }
+  .hand-area    { min-height: 155px; max-height: 185px; }
   .topbar-portrait, .you-avatar { width: 40px; height: 40px; }
-  .hand-tile    { width: 48px; height: 94px; }
+  .hand-tile    { width: 46px; height: 90px; }
 }
 
 @media (min-width: 768px) {
   .hand-tile { width: 60px; height: 116px; }
-  .hand-area { min-height: 170px; max-height: 210px; }
+  .hand-area { min-height: 195px; max-height: 240px; }
 }

@@ -67,9 +67,10 @@ function initGame() {
   _refreshUI();
   Render.drawBoard(state);
 
-  // If first player is AI, kick off their turn automatically
   if (!state.players[state.currentPlayer].isHuman) {
     _scheduleAITurn();
+  } else {
+    _updateIdleHint();
   }
 }
 
@@ -103,6 +104,7 @@ function _handleMoveResult(result) {
   } else {
     _refreshPassButton();
     _refreshHand();
+    _updateIdleHint();
   }
 }
 
@@ -122,16 +124,35 @@ InputEvents.onTileSelect = function(tileId) {
   const validMap  = validEnds.length > 0 ? new Set([tileId]) : new Set();
 
   Render.renderHandTiles(state.hands[0], validMap, tileId);
-  document.getElementById('board-hint').textContent =
-    validEnds.length > 0 ? 'Tap the board to place it' : 'No valid move with this tile';
+
+  let hint;
+  if (validEnds.length === 0) {
+    hint = 'No valid move with this tile';
+  } else if (state.board.length === 0) {
+    hint = 'Tap the board to open with this double';
+  } else {
+    const ends = validEnds.map(e => e === 'left' ? `◀ ${state.leftEnd}` : `${state.rightEnd} ▶`);
+    hint = `Tap board — plays to: ${ends.join(' or ')}`;
+  }
+  document.getElementById('board-hint').textContent = hint;
 };
 
 InputEvents.onTileDeselect = function() {
   Input.clearSelection();
   _hideEndPicker();
   Render.renderHandTiles(state.hands[0], null, null);
-  document.getElementById('board-hint').textContent = 'Tap a tile in your hand to select it';
+  _updateIdleHint();
 };
+
+function _updateIdleHint() {
+  const hint = document.getElementById('board-hint');
+  if (!hint) return;
+  if (state.board.length > 0 && state.leftEnd !== null) {
+    hint.textContent = `Play to ◀ ${state.leftEnd} or ${state.rightEnd} ▶ — tap a tile`;
+  } else {
+    hint.textContent = 'Tap a tile in your hand to select it';
+  }
+}
 
 InputEvents.onBoardTap = function(tileId) {
   if (state.status !== 'playing') return;

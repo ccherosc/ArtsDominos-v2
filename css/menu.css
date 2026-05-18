@@ -105,16 +105,36 @@
 /* ===== CHARACTER GRID ===== */
 .character-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: var(--gap-lg);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gap-md);
   width: 100%;
   max-width: 900px;
-  padding: var(--gap-lg);
+  padding: var(--gap-md) var(--gap-lg);
+}
+
+@media (min-width: 480px) {
+  .character-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap-lg);
+  }
+}
+
+@media (min-width: 700px) {
+  .character-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
 }
 
 .character-grid.small {
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: var(--gap-md);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gap-sm);
+}
+
+@media (min-width: 480px) {
+  .character-grid.small {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: var(--gap-md);
+  }
 }
 
 /* ===== CHARACTER CARD (Ornate Cuban Portrait Frame) ===== */
@@ -136,15 +156,16 @@
   overflow: visible;
 }
 
-.character-card:hover {
-  transform: translateY(-6px) scale(1.03);
+.character-card:hover,
+.character-card:active {
+  transform: translateY(-4px) scale(1.02);
   box-shadow:
     0 0 0 3px var(--gold-light),
     0 0 0 5px #0d1f20,
     0 0 0 7px var(--gold),
     0 0 0 8px rgba(0,0,0,0.8),
-    0 16px 48px rgba(0,0,0,0.8),
-    0 0 40px rgba(201,168,76,0.4);
+    0 12px 40px rgba(0,0,0,0.8),
+    0 0 32px rgba(201,168,76,0.4);
 }
 
 .character-card.selected {
