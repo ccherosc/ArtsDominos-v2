@@ -269,10 +269,11 @@ const Render = (() => {
   }
 
   function _createHandTileEl(tile) {
-    const isTablet = window.innerWidth >= 768;
-    const isShort  = window.innerHeight < 640;
-    const tileW = isTablet ? 48 : isShort ? 28 : 32;
-    const tileH = isTablet ? 94 : isShort ? 54 : 62;
+    const isTablet      = window.innerWidth >= 768;
+    const isLandscape   = window.innerWidth > window.innerHeight;
+    const isPhoneLand   = isLandscape && window.innerHeight < 500 && !isTablet;
+    const tileW = isTablet ? 48 : 32;
+    const tileH = isTablet ? 94 : isPhoneLand ? 50 : 62;
     const scale = window.devicePixelRatio || 1;
 
     const el = document.createElement('canvas');

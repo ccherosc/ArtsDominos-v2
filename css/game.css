@@ -62,14 +62,9 @@
   border-radius: 50%;
   border: 2px solid var(--gold);
   background: linear-gradient(135deg, var(--felt-dark), var(--felt));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-heading);
-  font-size: 0.65rem;
-  font-weight: 900;
-  color: var(--gold-light);
-  letter-spacing: 0.06em;
+  object-fit: cover;
+  object-position: top center;
+  filter: brightness(0.9) opacity(0.75);
 }
 
 .topbar-hand-count {
@@ -618,21 +613,61 @@
 }
 
 /* ===== RESPONSIVE ADJUSTMENTS ===== */
-@media (max-height: 640px) {
+
+/* Short portrait screens */
+@media (max-height: 640px) and (orientation: portrait) {
   .game-topbar  { height: 52px; min-height: 52px; }
   .hand-area    { min-height: 110px; max-height: 140px; }
   .topbar-portrait, .you-avatar { width: 36px; height: 36px; }
   .hand-tile    { width: 28px; height: 54px; }
 }
 
-@media (max-height: 700px) and (min-height: 641px) {
+@media (max-height: 700px) and (min-height: 641px) and (orientation: portrait) {
   .game-topbar  { height: 58px; min-height: 58px; }
   .hand-area    { min-height: 125px; max-height: 155px; }
   .topbar-portrait, .you-avatar { width: 40px; height: 40px; }
 }
 
+/* Tablet / wide screens */
 @media (min-width: 768px) {
   .hand-tile { width: 48px; height: 94px; }
   .hand-area { min-height: 165px; max-height: 210px; }
   .hand-tiles { gap: 4px; }
+}
+
+/* ===== LANDSCAPE PHONE (the primary play orientation) ===== */
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-topbar {
+    height: 48px;
+    min-height: 48px;
+  }
+  .topbar-portrait, .you-avatar {
+    width: 34px;
+    height: 34px;
+  }
+  .topbar-hand-count {
+    width: 15px;
+    height: 15px;
+    font-size: 0.56rem;
+    bottom: -3px;
+    right: -3px;
+  }
+  .topbar-name  { font-size: 0.75rem; max-width: 70px; }
+  .topbar-score { font-size: 0.9rem; }
+  .turn-name    { font-size: 0.72rem; }
+  .round-badge  { font-size: 0.52rem; }
+
+  .hand-area  { min-height: 96px; max-height: 118px; }
+  .hand-tile  { width: 32px; height: 50px; }
+  .hand-tiles { gap: 2px; }
+  .hand-scroll-wrap { padding: 4px 6px; }
+  .hand-actions     { padding: 2px 10px 4px; }
+  .pass-btn   { padding: 5px 14px; font-size: 0.78rem; }
+  .pass-icon  { font-size: 0.62rem; }
+  .boneyard-count { font-size: 0.85rem; }
+  .boneyard-label { font-size: 0.52rem; }
+
+  .end-select-bar { padding: 5px var(--gap-md); }
+  .end-btn        { padding: 5px 14px; font-size: 0.82rem; }
+  .board-hint     { font-size: 0.72rem; padding: 4px 12px; bottom: 6px; }
 }
