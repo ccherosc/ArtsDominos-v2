@@ -32,6 +32,7 @@ function buildPlayers(params) {
 // ── Game state ───────────────────────────────────────
 let state = null;
 let _pendingTile = null;
+let _quoteTimer  = null;
 const players = buildPlayers(Params);
 
 function _showEndPicker() {
@@ -41,6 +42,49 @@ function _showEndPicker() {
 function _hideEndPicker() {
   document.getElementById('end-select-bar').classList.add('hidden');
   _pendingTile = null;
+}
+
+function _showOppQuote(trigger) {
+  const opp = state.players.find(p => !p.isHuman);
+  if (!opp) return;
+  const quoteset = QUOTES[opp.id];
+  if (!quoteset || !quoteset[trigger] || !quoteset[trigger].length) return;
+  const lines = quoteset[trigger];
+  const line  = lines[Math.floor(Math.random() * lines.length)];
+
+  const el = document.getElementById('opp-quote');
+  if (!el) return;
+
+  if (_quoteTimer) { clearTimeout(_quoteTimer); _quoteTimer = null; }
+
+  el.textContent = line;
+  el.classList.remove('hidden');
+  void el.offsetWidth; // replay animation
+
+  _quoteTimer = setTimeout(() => {
+    el.classList.add('hidden');
+    _quoteTimer = null;
+  }, 2400);
+}
+
+function _quoteForMove(result) {
+  const aiIdx = state.players.findIndex(p => !p.isHuman);
+  if (aiIdx < 0) return null;
+
+  if (result.roundWinner !== undefined && result.roundWinner !== null) {
+    if (result.roundWinner === aiIdx) return result.blocked ? 'closeGame' : 'roundWin';
+    return null;
+  }
+
+  if (result.passed) return 'pass';
+
+  const lastTile = state.board[state.board.length - 1];
+  if (lastTile && lastTile.a === lastTile.b) return 'double';
+
+  const aiHand = state.hands[aiIdx];
+  if (aiHand && aiHand.length <= 2) return 'lowTiles';
+
+  return null;
 }
 
 function initGame() {
@@ -73,6 +117,7 @@ function initGame() {
   if (!state.players[state.currentPlayer].isHuman) {
     _scheduleAITurn();
   } else {
+    Render.setPulse(true, state);
     _updateIdleHint();
   }
 }
@@ -85,11 +130,11 @@ function _scheduleAITurn() {
 
   AI.takeTurn(state, state.currentPlayer, (result) => {
     document.getElementById('board-hint').classList.add('hidden-hint');
-    _handleMoveResult(result);
+    _handleMoveResult(result, false);
   });
 }
 
-function _handleMoveResult(result) {
+function _handleMoveResult(result, moverIsHuman = true) {
   if (!result.ok) return;
 
   result.passed ? Sound.pass() : Sound.clack();
@@ -99,14 +144,31 @@ function _handleMoveResult(result) {
   Render.drawBoard(state);
 
   if (state.status === 'round_over' || state.status === 'match_over') {
+    Render.setPulse(false, null);
+    if (!moverIsHuman) {
+      const trigger = _quoteForMove(result);
+      if (trigger) {
+        _showOppQuote(trigger);
+        setTimeout(() => _showResult(result), 900);
+        return;
+      }
+    }
     _showResult(result);
     return;
   }
 
+  // Show in-game AI quote
+  if (!moverIsHuman) {
+    const trigger = _quoteForMove(result);
+    if (trigger) _showOppQuote(trigger);
+  }
+
   // Advance to next player
   if (!state.players[state.currentPlayer].isHuman) {
+    Render.setPulse(false, null);
     _scheduleAITurn();
   } else {
+    Render.setPulse(true, state);
     _refreshPassButton();
     _refreshHand();
     _updateIdleHint();
@@ -314,7 +376,12 @@ const GameUI = {
     Render.drawBoard(state);
     _refreshHand();
     Sound.shuffle();
-    if (!state.players[state.currentPlayer].isHuman) _scheduleAITurn();
+    if (!state.players[state.currentPlayer].isHuman) {
+      Render.setPulse(false, null);
+      _scheduleAITurn();
+    } else {
+      Render.setPulse(true, state);
+    }
   },
 
   restartRound() {
@@ -327,7 +394,12 @@ const GameUI = {
     Render.drawBoard(state);
     _refreshHand();
     Sound.shuffle();
-    if (!state.players[state.currentPlayer].isHuman) _scheduleAITurn();
+    if (!state.players[state.currentPlayer].isHuman) {
+      Render.setPulse(false, null);
+      _scheduleAITurn();
+    } else {
+      Render.setPulse(true, state);
+    }
   },
 
   rematch() {
@@ -341,7 +413,12 @@ const GameUI = {
     Render.drawBoard(state);
     _refreshHand();
     Sound.shuffle();
-    if (!state.players[state.currentPlayer].isHuman) _scheduleAITurn();
+    if (!state.players[state.currentPlayer].isHuman) {
+      Render.setPulse(false, null);
+      _scheduleAITurn();
+    } else {
+      Render.setPulse(true, state);
+    }
   },
 
   toggleSfx() {

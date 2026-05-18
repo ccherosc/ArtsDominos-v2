@@ -675,6 +675,37 @@
   to   { transform: translateY(0);    opacity: 1; }
 }
 
+/* ===== OPPONENT QUOTE BUBBLE ===== */
+.opp-quote-bubble {
+  position: fixed;
+  top: 80px;
+  left: 12px;
+  background: rgba(15,8,4,0.92);
+  border: 1px solid rgba(201,168,76,0.5);
+  border-radius: var(--r-md);
+  padding: 8px 14px;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--text-light);
+  max-width: 230px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 35;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  animation: quoteIn 0.22s var(--ease-out-cubic);
+}
+
+.opp-quote-bubble.hidden {
+  display: none;
+}
+
+@keyframes quoteIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ===== RESPONSIVE ADJUSTMENTS ===== */
 
 /* Short portrait screens */
@@ -683,12 +714,19 @@
   .hand-area    { min-height: 110px; max-height: 140px; }
   .topbar-portrait, .you-avatar { width: 36px; height: 36px; }
   .hand-tile    { width: 28px; height: 54px; }
+  .opp-quote-bubble { top: 60px; }
 }
 
 @media (max-height: 700px) and (min-height: 641px) and (orientation: portrait) {
   .game-topbar  { height: 58px; min-height: 58px; }
   .hand-area    { min-height: 125px; max-height: 155px; }
   .topbar-portrait, .you-avatar { width: 40px; height: 40px; }
+  .opp-quote-bubble { top: 66px; }
+}
+
+/* Landscape phone */
+@media (max-height: 480px) and (orientation: landscape) {
+  .opp-quote-bubble { top: 56px; }
 }
 
 /* Tablet / wide screens */

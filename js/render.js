@@ -29,6 +29,23 @@ const Render = (() => {
   const MIN_ZOOM = 0.25;
   const MAX_ZOOM = 4.0;
 
+  // End-badge pulse (runs only during human's turn)
+  let _pulseActive  = false;
+  let _pulseStateRef = null;
+  let _pulseRAF     = null;
+
+  function setPulse(active, stateRef) {
+    _pulseActive   = active;
+    _pulseStateRef = active ? stateRef : null;
+    if (active && !_pulseRAF) _pulseTick();
+  }
+
+  function _pulseTick() {
+    if (!_pulseActive || !_pulseStateRef) { _pulseRAF = null; return; }
+    drawBoard(_pulseStateRef);
+    _pulseRAF = requestAnimationFrame(_pulseTick);
+  }
+
   function init(canvasEl) {
     canvas = canvasEl;
     ctx    = canvas.getContext('2d');
@@ -98,7 +115,8 @@ const Render = (() => {
     if (state.board.length === 0) {
       _drawEmptyHint();
     } else {
-      _drawChain(state.board, state.leftEnd, state.rightEnd);
+      const pulse = _pulseActive && state.players[state.currentPlayer]?.isHuman;
+      _drawChain(state.board, state.leftEnd, state.rightEnd, pulse);
     }
 
     ctx.restore();
@@ -107,7 +125,7 @@ const Render = (() => {
 
   // ── Chain layout ───────────────────────────────────
 
-  function _drawChain(boardTiles, leftEndVal, rightEndVal) {
+  function _drawChain(boardTiles, leftEndVal, rightEndVal, pulse) {
     // Spatial order: left-played (reversed) + center double + right-played
     const center     = boardTiles.find(t => t.end === 'center');
     const leftTiles  = boardTiles.filter(t => t.end === 'left').reverse();
@@ -148,8 +166,8 @@ const Render = (() => {
 
     // End value badges — show current left/right pip the player must match
     if (ordered.length > 0 && leftEndVal !== null) {
-      _drawEndBadge(-totalW / 2 - 24, 0, leftEndVal);
-      _drawEndBadge( totalW / 2 + 24, 0, rightEndVal);
+      _drawEndBadge(-totalW / 2 - 24, 0, leftEndVal, pulse);
+      _drawEndBadge( totalW / 2 + 24, 0, rightEndVal, pulse);
     }
   }
 
@@ -210,12 +228,26 @@ const Render = (() => {
 
   // ── End badges ────────────────────────────────────
 
-  function _drawEndBadge(cx, cy, pipVal) {
-    const R = 15;
+  function _drawEndBadge(cx, cy, pipVal, pulse) {
+    const t    = pulse ? (Date.now() % 1600) / 1600 : 0;
+    const sin  = Math.sin(t * Math.PI * 2);
+    const R    = pulse ? 15 + sin * 2.5 : 15;
+    const fill = pulse ? `rgba(201,168,76,${0.85 + sin * 0.15})` : 'rgba(201,168,76,0.92)';
+
     ctx.save();
+
+    // Outer glow ring during pulse
+    if (pulse) {
+      const glowR = R + 5 + sin * 3;
+      ctx.beginPath();
+      ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(201,168,76,${0.18 + sin * 0.14})`;
+      ctx.fill();
+    }
+
     ctx.beginPath();
     ctx.arc(cx, cy, R, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(201,168,76,0.92)';
+    ctx.fillStyle = fill;
     ctx.fill();
     ctx.strokeStyle = '#F5E090';
     ctx.lineWidth = 1.5;
@@ -455,6 +487,7 @@ const Render = (() => {
     resetPan,
     fitChain,
     rebuildHand,
+    setPulse,
   };
 
 })();
