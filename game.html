@@ -119,6 +119,7 @@
       <h2>Game Paused</h2>
       <div class="gold-rule"></div>
       <button class="btn-primary" onclick="GameUI.togglePause()">Resume</button>
+      <button class="toggle-btn" id="pause-sfx-btn" onclick="GameUI.toggleSfx()" style="align-self:stretch;border-radius:var(--r-md);padding:10px;">SFX: ON</button>
       <button class="btn-secondary" onclick="GameUI.restartRound()">Restart Round</button>
       <button class="btn-secondary" onclick="window.location.href='index.html'">Main Menu</button>
     </div>
@@ -158,6 +159,7 @@
   <script src="js/engine.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/scoring.js"></script>
+  <script src="js/sound.js"></script>
   <script src="js/render.js"></script>
   <script src="js/input.js"></script>
   <script src="js/game.js"></script>

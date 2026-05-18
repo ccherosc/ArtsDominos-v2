@@ -44,6 +44,7 @@ function _hideEndPicker() {
 }
 
 function initGame() {
+  Sound.init();
   state = Engine.createGameState(players, Params.format || 'rounds');
   window._gameState = state; // exposed for input.js pan redraws
 
@@ -66,6 +67,7 @@ function initGame() {
 
   _refreshUI();
   Render.drawBoard(state);
+  Sound.shuffle();
 
   if (!state.players[state.currentPlayer].isHuman) {
     _scheduleAITurn();
@@ -88,6 +90,8 @@ function _scheduleAITurn() {
 
 function _handleMoveResult(result) {
   if (!result.ok) return;
+
+  result.passed ? Sound.pass() : Sound.clack();
 
   _hideEndPicker();
   _refreshUI();
@@ -220,11 +224,12 @@ function _showResult(result) {
     const summary = Scoring.getMatchSummary(state);
     const won = summary.winnerIndex === 0;
 
-    // Record win/loss
+    // Record win/loss and play result sound
     const opp = CharacterDB.getById(Params.opponent);
     if (opp) {
       won ? Storage.recordWin(opp.id) : Storage.recordLoss(opp.id);
     }
+    setTimeout(() => won ? Sound.win() : Sound.lose(), 300);
 
     document.getElementById('match-result-icon').textContent  = won ? '🏆' : '😔';
     document.getElementById('match-result-title').textContent = won ? 'You Win the Match!' : 'You Lost the Match';
@@ -235,6 +240,7 @@ function _showResult(result) {
 
   } else {
     const won = result.roundWinner === 0;
+    setTimeout(() => won ? Sound.roundWin() : Sound.pass(), 200);
     document.getElementById('result-icon').textContent  = won ? '🎉' : '😤';
     document.getElementById('result-title').textContent = won ? 'Round Won!' : 'Round Lost';
     document.getElementById('result-detail').textContent = Scoring.roundResultText(state, result);
@@ -270,6 +276,9 @@ const GameUI = {
   togglePause() {
     const overlay = document.getElementById('pause-overlay');
     overlay.classList.toggle('hidden');
+    // Sync SFX button to current sound state whenever pause opens
+    const btn = document.getElementById('pause-sfx-btn');
+    if (btn) { btn.textContent = Sound.isEnabled() ? 'SFX: ON' : 'SFX: OFF'; btn.classList.toggle('on', Sound.isEnabled()); }
   },
 
   nextRound() {
@@ -279,6 +288,7 @@ const GameUI = {
     _refreshUI();
     Render.resetPan();
     Render.drawBoard(state);
+    Sound.shuffle();
     if (!state.players[state.currentPlayer].isHuman) _scheduleAITurn();
   },
 
@@ -289,6 +299,7 @@ const GameUI = {
     _refreshUI();
     Render.resetPan();
     Render.drawBoard(state);
+    Sound.shuffle();
     if (!state.players[state.currentPlayer].isHuman) _scheduleAITurn();
   },
 
@@ -300,7 +311,17 @@ const GameUI = {
     _refreshUI();
     Render.resetPan();
     Render.drawBoard(state);
+    Sound.shuffle();
     if (!state.players[state.currentPlayer].isHuman) _scheduleAITurn();
+  },
+
+  toggleSfx() {
+    const next = !Sound.isEnabled();
+    Sound.setEnabled(next);
+    Storage.saveSetting('sfx', next);
+    const btn = document.getElementById('pause-sfx-btn');
+    if (btn) { btn.textContent = next ? 'SFX: ON' : 'SFX: OFF'; btn.classList.toggle('on', next); }
+    if (next) Sound.clack();
   },
 };
 
