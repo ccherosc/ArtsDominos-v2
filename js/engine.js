@@ -299,8 +299,9 @@ const Engine = (() => {
     state.rightEnd       = null;
     state.passCount      = 0;
     state.firstMovePending = true;
-    state.openingDouble  = _findHighestDouble(state.hands[state._findOpeningPlayerForRound()]);
-    state.currentPlayer  = state._findOpeningPlayerForRound();
+    const openingPlayer  = _findOpeningPlayer(state.hands, state.players.length);
+    state.openingDouble  = _findHighestDouble(state.hands[openingPlayer]);
+    state.currentPlayer  = openingPlayer;
     state.roundNumber++;
     state.winner         = null;
     state.lastMove       = null;

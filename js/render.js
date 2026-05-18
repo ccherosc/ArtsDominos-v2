@@ -23,10 +23,10 @@ const Render = (() => {
   let panX = 0, panY = 0;
 
   // Tile dimensions (logical px, before dpr scaling)
-  const TILE_W = 52;
-  const TILE_H = 100;
+  const TILE_W = 60;
+  const TILE_H = 116;
   const TILE_R = 6;       // corner radius
-  const PIP_R  = 4.5;     // pip circle radius
+  const PIP_R  = 5.5;     // pip circle radius
   const GAP    = 6;       // gap between tiles on board
 
   function init(canvasEl) {
@@ -136,49 +136,62 @@ const Render = (() => {
   }
 
   // Cuban flag: simplified — horizontal stripes left side, red triangle accent
-  function _drawCubanFlagHalf(x, y, w, h) {
-    ctx.save();
-    ctx.beginPath();
-    _roundRectPath(x, y, w, h, 3);
-    ctx.clip();
+  // drawCtx defaults to the board canvas ctx; pass tctx for hand tile canvas
+  function _drawCubanFlagHalf(x, y, w, h, drawCtx) {
+    const c = drawCtx || ctx;
+    const r = 3;
+    c.save();
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.lineTo(x + w - r, y);
+    c.arcTo(x + w, y, x + w, y + r, r);
+    c.lineTo(x + w, y + h - r);
+    c.arcTo(x + w, y + h, x + w - r, y + h, r);
+    c.lineTo(x + r, y + h);
+    c.arcTo(x, y + h, x, y + h - r, r);
+    c.lineTo(x, y + r);
+    c.arcTo(x, y, x + r, y, r);
+    c.closePath();
+    c.clip();
 
     // Alternating blue/white stripes (3 blue, 2 white = 5 stripes)
     const stripeH = h / 5;
     const stripeColors = ['#002A8F', '#FFFFFF', '#002A8F', '#FFFFFF', '#002A8F'];
     stripeColors.forEach((color, i) => {
-      ctx.fillStyle = color;
-      ctx.fillRect(x, y + i * stripeH, w, stripeH + 1);
+      c.fillStyle = color;
+      c.fillRect(x, y + i * stripeH, w, stripeH + 1);
     });
 
     // Red triangle on left
-    ctx.beginPath();
-    ctx.moveTo(x,         y);
-    ctx.lineTo(x + w * 0.42, y + h / 2);
-    ctx.lineTo(x,         y + h);
-    ctx.closePath();
-    ctx.fillStyle = '#CF142B';
-    ctx.fill();
+    c.beginPath();
+    c.moveTo(x,            y);
+    c.lineTo(x + w * 0.42, y + h / 2);
+    c.lineTo(x,            y + h);
+    c.closePath();
+    c.fillStyle = '#CF142B';
+    c.fill();
 
     // White star in triangle center
-    _drawStar(x + w * 0.15, y + h / 2, 4, 5);
+    _drawStar(x + w * 0.15, y + h / 2, 4, 5, c);
 
-    ctx.restore();
+    c.restore();
   }
 
-  function _drawStar(cx, cy, r, points) {
-    ctx.save();
-    ctx.beginPath();
+  function _drawStar(cx, cy, r, points, drawCtx) {
+    const c = drawCtx || ctx;
+    c.save();
+    c.beginPath();
     for (let i = 0; i < points * 2; i++) {
       const angle = (i * Math.PI) / points - Math.PI / 2;
       const radius = i % 2 === 0 ? r : r * 0.4;
       const px = cx + Math.cos(angle) * radius;
       const py = cy + Math.sin(angle) * radius;
-      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      i === 0 ? c.moveTo(px, py) : c.lineTo(px, py);
     }
-    ctx.closePath();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fill();
-    ctx.restore();
+    c.closePath();
+    c.fillStyle = '#FFFFFF';
+    c.fill();
+    c.restore();
   }
 
   function _drawDividingLine(x1, y1, x2, y2, horizontal) {
@@ -221,6 +234,15 @@ const Render = (() => {
       ctx.arc(x + rx * w, y + ry * h, PIP_R, 0, Math.PI * 2);
       ctx.fill();
     });
+    // Small count label for 7-9 (hard to distinguish visually at small sizes)
+    if (count >= 7) {
+      const fs = Math.floor(h * 0.22);
+      ctx.font = `700 ${fs}px Lato, sans-serif`;
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'top';
+      ctx.fillText(count, x + w - 3, y + 2);
+    }
   }
 
   // ── Empty board hint ───────────────────────────────
@@ -272,38 +294,39 @@ const Render = (() => {
   }
 
   function _createHandTileEl(tile) {
+    const tileW = window.innerWidth < 768 ? 56 : 60;
+    const tileH = window.innerWidth < 768 ? 108 : 116;
+    const scale = window.devicePixelRatio || 1;
+
     const el = document.createElement('canvas');
     el.className = 'hand-tile';
     el.dataset.tileId = tile.id;
     el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
-    el.width  = 44 * (window.devicePixelRatio || 1);
-    el.height = 84 * (window.devicePixelRatio || 1);
-    el.style.width  = '44px';
-    el.style.height = '84px';
+    el.width  = tileW * scale;
+    el.height = tileH * scale;
+    el.style.width  = tileW + 'px';
+    el.style.height = tileH + 'px';
 
     const tctx = el.getContext('2d');
-    const scale = window.devicePixelRatio || 1;
     tctx.scale(scale, scale);
 
-    _drawHandTileOnCtx(tctx, tile, 44, 84);
+    _drawHandTileOnCtx(tctx, tile, tileW, tileH);
     return el;
   }
 
   function _drawHandTileOnCtx(tctx, tile, w, h) {
     const hH = h / 2 - 1;
+    const pipR = PIP_R - 0.5;
 
     // Base
     tctx.fillStyle = '#F8F4E8';
     _roundRectOnCtx(tctx, 1, 1, w - 2, h - 2, TILE_R);
     tctx.fill();
 
-    // Flag halves
-    const saved = ctx;
-    ctx = tctx;
-    _drawCubanFlagHalf(2, 2, w - 4, hH - 1);
-    _drawCubanFlagHalf(2, hH + 3, w - 4, hH - 1);
-    ctx = saved;
+    // Flag halves — pass tctx directly, no global ctx swap
+    _drawCubanFlagHalf(2, 2, w - 4, hH - 1, tctx);
+    _drawCubanFlagHalf(2, hH + 3, w - 4, hH - 1, tctx);
 
     // Dividing line
     tctx.beginPath();
@@ -313,20 +336,29 @@ const Render = (() => {
     tctx.lineWidth = 1.5;
     tctx.stroke();
 
-    // Pips using tctx directly
+    // Pips
     tctx.fillStyle = '#1A1008';
     const pA = PIP_POSITIONS[tile.a] || [];
     const pB = PIP_POSITIONS[tile.b] || [];
     pA.forEach(([rx, ry]) => {
       tctx.beginPath();
-      tctx.arc(2 + rx * (w - 4), 2 + ry * (hH - 2), PIP_R - 1, 0, Math.PI * 2);
+      tctx.arc(2 + rx * (w - 4), 2 + ry * (hH - 2), pipR, 0, Math.PI * 2);
       tctx.fill();
     });
     pB.forEach(([rx, ry]) => {
       tctx.beginPath();
-      tctx.arc(2 + rx * (w - 4), hH + 3 + ry * (hH - 2), PIP_R - 1, 0, Math.PI * 2);
+      tctx.arc(2 + rx * (w - 4), hH + 3 + ry * (hH - 2), pipR, 0, Math.PI * 2);
       tctx.fill();
     });
+
+    // Pip count labels for 7-9 (hard to count at small sizes)
+    const fs = Math.floor(hH * 0.22);
+    tctx.font = `700 ${fs}px Lato, sans-serif`;
+    tctx.fillStyle = 'rgba(0,0,0,0.4)';
+    tctx.textAlign = 'right';
+    tctx.textBaseline = 'top';
+    if (tile.a >= 7) tctx.fillText(tile.a, w - 4, 3);
+    if (tile.b >= 7) tctx.fillText(tile.b, w - 4, hH + 4);
 
     // Border
     _roundRectOnCtx(tctx, 1, 1, w - 2, h - 2, TILE_R);

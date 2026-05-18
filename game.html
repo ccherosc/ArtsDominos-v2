@@ -84,6 +84,13 @@
     <div class="board-hint" id="board-hint">Tap a tile in your hand, then tap where to place it</div>
   </main>
 
+  <!-- ===== END SELECTION BAR ===== -->
+  <div class="end-select-bar hidden" id="end-select-bar">
+    <button class="end-btn" onclick="GameUI.chooseEnd('left')">&#8592; Left</button>
+    <span class="end-select-label">Which end?</span>
+    <button class="end-btn" onclick="GameUI.chooseEnd('right')">Right &#8594;</button>
+  </div>
+
   <!-- ===== PLAYER HAND ===== -->
   <footer class="hand-area" id="hand-area">
 

@@ -31,7 +31,17 @@ function buildPlayers(params) {
 
 // ── Game state ───────────────────────────────────────
 let state = null;
+let _pendingTile = null;
 const players = buildPlayers(Params);
+
+function _showEndPicker() {
+  document.getElementById('end-select-bar').classList.remove('hidden');
+}
+
+function _hideEndPicker() {
+  document.getElementById('end-select-bar').classList.add('hidden');
+  _pendingTile = null;
+}
 
 function initGame() {
   state = Engine.createGameState(players, Params.format || 'rounds');
@@ -78,6 +88,7 @@ function _scheduleAITurn() {
 function _handleMoveResult(result) {
   if (!result.ok) return;
 
+  _hideEndPicker();
   _refreshUI();
   Render.drawBoard(state);
 
@@ -101,9 +112,9 @@ InputEvents.onTileSelect = function(tileId) {
   if (state.status !== 'playing') return;
   if (!state.players[state.currentPlayer].isHuman) return;
 
+  _hideEndPicker();
   Input.setSelectedTileId(tileId);
 
-  // Build valid move map for this tile
   const tile = state.hands[0].find(t => t.id === tileId);
   if (!tile) return;
 
@@ -112,11 +123,12 @@ InputEvents.onTileSelect = function(tileId) {
 
   Render.renderHandTiles(state.hands[0], validMap, tileId);
   document.getElementById('board-hint').textContent =
-    validEnds.length > 0 ? 'Tap the board to place — left or right end' : 'No valid move with this tile';
+    validEnds.length > 0 ? 'Tap the board to place it' : 'No valid move with this tile';
 };
 
 InputEvents.onTileDeselect = function() {
   Input.clearSelection();
+  _hideEndPicker();
   Render.renderHandTiles(state.hands[0], null, null);
   document.getElementById('board-hint').textContent = 'Tap a tile in your hand to select it';
 };
@@ -132,10 +144,13 @@ InputEvents.onBoardTap = function(tileId) {
   const validEnds = Engine.getValidEnds(state, tile);
   if (validEnds.length === 0) return;
 
-  // Auto-pick end: if only one valid end, use it; else prefer 'right'
-  // Full end selection UI comes in Phase 6
-  const end = validEnds[0];
-  const result = Engine.applyMove(state, 0, tile, end);
+  if (validEnds.length > 1) {
+    _pendingTile = tile;
+    _showEndPicker();
+    return;
+  }
+
+  const result = Engine.applyMove(state, 0, tile, validEnds[0]);
   Input.clearSelection();
   _handleMoveResult(result);
 };
@@ -221,6 +236,16 @@ const GameUI = {
     _handleMoveResult(result);
   },
 
+  chooseEnd(end) {
+    if (!_pendingTile) return;
+    const tile = _pendingTile;
+    _pendingTile = null;
+    _hideEndPicker();
+    Input.clearSelection();
+    const result = Engine.applyMove(state, 0, tile, end);
+    _handleMoveResult(result);
+  },
+
   togglePause() {
     const overlay = document.getElementById('pause-overlay');
     overlay.classList.toggle('hidden');
@@ -228,6 +253,7 @@ const GameUI = {
 
   nextRound() {
     document.getElementById('result-overlay').classList.add('hidden');
+    _hideEndPicker();
     Engine.startNewRound(state);
     _refreshUI();
     Render.resetPan();
@@ -237,6 +263,7 @@ const GameUI = {
 
   restartRound() {
     document.getElementById('pause-overlay').classList.add('hidden');
+    _hideEndPicker();
     Engine.startNewRound(state);
     _refreshUI();
     Render.resetPan();
@@ -246,6 +273,7 @@ const GameUI = {
 
   rematch() {
     document.getElementById('match-over-overlay').classList.add('hidden');
+    _hideEndPicker();
     state = Engine.createGameState(players, Params.format || 'rounds');
     window._gameState = state;
     _refreshUI();
