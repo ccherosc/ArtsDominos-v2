@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1a3535"/>
+      <stop offset="100%" stop-color="#0a1f1f"/>
+    </radialGradient>
+  </defs>
+  <rect width="300" height="400" fill="url(#bg)"/>
+  <!-- Silhouette head -->
+  <circle cx="150" cy="130" r="55" fill="#243d3d"/>
+  <!-- Silhouette body -->
+  <ellipse cx="150" cy="310" rx="85" ry="85" fill="#243d3d"/>
+  <!-- Subtle question mark -->
+  <text x="150" y="148" text-anchor="middle" fill="#3a5555"
+        font-size="56" font-family="Georgia, serif" font-weight="700">?</text>
+  <!-- "Portrait Coming Soon" label -->
+  <rect x="40" y="350" width="220" height="30" rx="4" fill="rgba(0,0,0,0.4)"/>
+  <text x="150" y="370" text-anchor="middle" fill="#4a7070"
+        font-size="13" font-family="sans-serif" letter-spacing="1">Portrait Coming Soon</text>
+</svg>

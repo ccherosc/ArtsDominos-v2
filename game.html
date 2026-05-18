@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#143D24">
+  <title>ArtsDominos — Playing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/game.css">
+</head>
+<body class="game-body">
+
+  <!-- ===== TOP BAR ===== -->
+  <header class="game-topbar" id="game-topbar">
+
+    <!-- Opponent side (1v1) or Team display -->
+    <div class="topbar-player opponent-side" id="topbar-opponent">
+      <div class="topbar-portrait-wrap">
+        <img class="topbar-portrait" id="opp-portrait" src="assets/characters/silhouette.svg" alt="Opponent">
+        <div class="topbar-hand-count" id="opp-hand-count">10</div>
+      </div>
+      <div class="topbar-info">
+        <div class="topbar-name" id="opp-name">Opponent</div>
+        <div class="topbar-score-wrap">
+          <span class="topbar-score-label">Score</span>
+          <span class="topbar-score" id="opp-score">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: round + turn indicator -->
+    <div class="topbar-center">
+      <div class="round-badge" id="round-badge">Round 1</div>
+      <div class="turn-indicator" id="turn-indicator">
+        <span class="turn-arrow" id="turn-arrow">&#9654;</span>
+        <span class="turn-name" id="turn-name">Your Turn</span>
+      </div>
+      <div class="format-badge" id="format-badge">Best of 3</div>
+    </div>
+
+    <!-- Your side -->
+    <div class="topbar-player your-side">
+      <div class="topbar-info right-align">
+        <div class="topbar-name">You</div>
+        <div class="topbar-score-wrap">
+          <span class="topbar-score-label">Score</span>
+          <span class="topbar-score" id="your-score">0</span>
+        </div>
+      </div>
+      <div class="topbar-portrait-wrap">
+        <div class="topbar-portrait you-avatar">YOU</div>
+        <div class="topbar-hand-count" id="your-hand-count">10</div>
+      </div>
+    </div>
+
+    <!-- Menu button -->
+    <button class="game-menu-btn" onclick="GameUI.togglePause()" title="Menu">&#9776;</button>
+
+  </header>
+
+  <!-- ===== TEAMS ROW (2v2 only, hidden in 1v1) ===== -->
+  <div class="teams-bar hidden" id="teams-bar">
+    <div class="team-slot" id="team-partner">
+      <img class="team-portrait" src="assets/characters/silhouette.svg" alt="Partner">
+      <span class="team-name" id="partner-name">Partner</span>
+      <span class="team-tiles" id="partner-tiles">10</span>
+    </div>
+    <div class="team-divider">&#9866;</div>
+    <div class="team-slot" id="team-opp2">
+      <img class="team-portrait" src="assets/characters/silhouette.svg" alt="Opp 2">
+      <span class="team-name" id="opp2-name">Opp 2</span>
+      <span class="team-tiles" id="opp2-tiles">10</span>
+    </div>
+  </div>
+
+  <!-- ===== GAME BOARD CANVAS ===== -->
+  <main class="board-wrap" id="board-wrap">
+    <canvas id="game-canvas"></canvas>
+    <div class="board-hint" id="board-hint">Tap a tile in your hand, then tap where to place it</div>
+  </main>
+
+  <!-- ===== PLAYER HAND ===== -->
+  <footer class="hand-area" id="hand-area">
+
+    <div class="hand-scroll-wrap">
+      <div class="hand-tiles" id="hand-tiles">
+        <!-- Tile elements injected by render.js -->
+      </div>
+    </div>
+
+    <div class="hand-actions">
+      <button class="pass-btn" id="pass-btn" onclick="GameUI.playerPass()" disabled>
+        <span class="pass-icon">&#9646;&#9646;</span> Pass
+      </button>
+      <div class="hand-meta">
+        <div class="boneyard-info" id="boneyard-info">
+          <span class="boneyard-label">Tiles left</span>
+          <span class="boneyard-count" id="boneyard-count">35</span>
+        </div>
+      </div>
+    </div>
+
+  </footer>
+
+  <!-- ===== PAUSE / MENU OVERLAY ===== -->
+  <div class="pause-overlay hidden" id="pause-overlay">
+    <div class="pause-card">
+      <h2>Game Paused</h2>
+      <div class="gold-rule"></div>
+      <button class="btn-primary" onclick="GameUI.togglePause()">Resume</button>
+      <button class="btn-secondary" onclick="GameUI.restartRound()">Restart Round</button>
+      <button class="btn-secondary" onclick="window.location.href='index.html'">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- ===== ROUND RESULT OVERLAY ===== -->
+  <div class="result-overlay hidden" id="result-overlay">
+    <div class="result-card">
+      <div class="result-icon" id="result-icon">&#127881;</div>
+      <h2 class="result-title" id="result-title">Round Over!</h2>
+      <div class="result-detail" id="result-detail"></div>
+      <div class="result-scores" id="result-scores"></div>
+      <div class="gold-rule"></div>
+      <button class="btn-primary" id="result-next-btn" onclick="GameUI.nextRound()">Next Round</button>
+      <button class="btn-secondary" onclick="window.location.href='index.html'">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- ===== MATCH OVER OVERLAY ===== -->
+  <div class="result-overlay hidden" id="match-over-overlay">
+    <div class="result-card">
+      <div class="result-icon" id="match-result-icon">&#127881;</div>
+      <h2 class="result-title" id="match-result-title">Match Over!</h2>
+      <div class="result-detail" id="match-result-detail"></div>
+      <div class="result-scores" id="match-result-scores"></div>
+      <div class="gold-rule"></div>
+      <button class="btn-primary" onclick="GameUI.rematch()">Rematch</button>
+      <button class="btn-secondary" onclick="window.location.href='index.html'">Main Menu</button>
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/characters.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

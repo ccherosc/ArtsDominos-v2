@@ -1,0 +1,455 @@
+/* =====================================================
+   ArtsDominos · main.css
+   Global design tokens, reset, hall background,
+   shared components used across index + game screens
+   ===================================================== */
+
+/* ===== DESIGN TOKENS ===== */
+:root {
+  /* Cuban Color Palette */
+  --mahogany:        #1A0D07;
+  --mahogany-mid:    #2C1810;
+  --mahogany-light:  #3D2316;
+  --wood:            #5C3520;
+
+  /* Gold */
+  --gold:            #C9A84C;
+  --gold-light:      #E8C96B;
+  --gold-dark:       #8B6914;
+  --gold-shine:      #F5E090;
+  --gold-dim:        #6B5010;
+
+  /* Cuban Flag */
+  --cuban-red:       #CF142B;
+  --cuban-blue:      #002A8F;
+  --cuban-white:     #F5F5F0;
+  --cuban-star:      #FFFFFF;
+
+  /* Felt Table */
+  --felt:            #1B4D2E;
+  --felt-dark:       #143D24;
+  --felt-shadow:     #0D2A1A;
+  --felt-highlight:  #236438;
+
+  /* Domino Tiles */
+  --tile-cream:      #F8F4E8;
+  --tile-border:     #D4C9A8;
+  --pip:             #1A1008;
+
+  /* Text */
+  --text-light:      #F0E6D3;
+  --text-gold:       #C9A84C;
+  --text-dim:        #A08060;
+  --text-muted:      #6B5040;
+
+  /* Difficulty */
+  --diff-beginner:   #4CAF50;
+  --diff-easy:       #8BC34A;
+  --diff-medium:     #FFC107;
+  --diff-hard:       #FF5722;
+  --diff-expert:     #E040FB;
+  --diff-master:     #CF142B;
+
+  /* Layout */
+  --gap-xs:  4px;
+  --gap-sm:  8px;
+  --gap-md:  16px;
+  --gap-lg:  24px;
+  --gap-xl:  40px;
+
+  /* Radii */
+  --r-sm:    6px;
+  --r-md:    12px;
+  --r-lg:    20px;
+  --r-pill:  100px;
+
+  /* Shadows */
+  --shadow-gold:    0 0 20px rgba(201,168,76,0.35);
+  --shadow-gold-lg: 0 0 40px rgba(201,168,76,0.5);
+  --shadow-deep:    0 8px 40px rgba(0,0,0,0.7);
+  --shadow-tile:    0 4px 12px rgba(0,0,0,0.5);
+  --shadow-inset:   inset 0 2px 8px rgba(0,0,0,0.5);
+
+  /* Typography */
+  --font-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-script:  'Dancing Script', cursive;
+  --font-body:    'Lato', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Motion */
+  --ease-out-cubic: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 0.15s ease;
+  --t-mid:  0.3s ease;
+  --t-slow: 0.5s var(--ease-out-cubic);
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--font-body);
+  background: var(--mahogany);
+  color: var(--text-light);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ===== CUBAN GAME HALL BACKGROUND ===== */
+.hall-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    /* Warm candlelight glow from above */
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(200,130,30,0.12) 0%, transparent 70%),
+    /* Amber corner warmth */
+    radial-gradient(ellipse 50% 60% at 0% 100%, rgba(120,50,10,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 100% 100%, rgba(120,50,10,0.12) 0%, transparent 60%),
+    /* Subtle wood grain lines */
+    repeating-linear-gradient(
+      88deg,
+      transparent 0px,
+      transparent 60px,
+      rgba(200,150,80,0.018) 60px,
+      rgba(200,150,80,0.018) 62px
+    ),
+    repeating-linear-gradient(
+      2deg,
+      transparent 0px,
+      transparent 100px,
+      rgba(200,150,80,0.012) 100px,
+      rgba(200,150,80,0.012) 102px
+    ),
+    /* Base mahogany gradient */
+    linear-gradient(170deg, #2C1810 0%, #1A0D07 45%, #0F0603 100%);
+}
+
+.hall-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 50%,
+    transparent 40%,
+    rgba(0,0,0,0.55) 100%
+  );
+}
+
+/* ===== SCREEN SYSTEM ===== */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px);
+  transition: opacity var(--t-mid), transform var(--t-mid);
+}
+
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+/* ===== SCREEN HEADER ===== */
+.screen-header {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-md);
+  width: 100%;
+  max-width: 860px;
+  padding: var(--gap-lg) var(--gap-lg) var(--gap-md);
+  border-bottom: 1px solid rgba(201,168,76,0.25);
+  margin-bottom: var(--gap-lg);
+}
+
+.screen-header h2 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.1rem, 3vw, 1.7rem);
+  color: var(--gold-light);
+  font-weight: 700;
+}
+
+/* ===== CONTENT CONTAINERS ===== */
+.content-container {
+  width: 100%;
+  max-width: 700px;
+  padding: 0 var(--gap-lg) var(--gap-xl);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== GOLD RULE ===== */
+.gold-rule {
+  width: 100%;
+  max-width: 280px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: var(--gap-md) auto;
+}
+.gold-rule.narrow { max-width: 180px; }
+
+/* ===== BUTTONS ===== */
+.btn-primary {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  padding: 15px 28px;
+  background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gold-light) 100%);
+  color: var(--mahogany);
+  border: none;
+  border-radius: var(--r-md);
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: var(--shadow-gold), inset 0 1px 0 rgba(255,255,255,0.25);
+  transition: transform var(--t-fast), box-shadow var(--t-fast);
+  text-align: center;
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-gold-lg), var(--shadow-deep);
+  outline: none;
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  padding: 12px 28px;
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--r-md);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  transition: all var(--t-fast);
+  text-align: center;
+}
+
+.btn-secondary:hover {
+  background: rgba(201,168,76,0.1);
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: var(--gold);
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  border-radius: var(--r-sm);
+  transition: background var(--t-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-back:hover {
+  background: rgba(201,168,76,0.12);
+}
+
+.btn-danger {
+  padding: 10px 22px;
+  background: linear-gradient(135deg, #8B0010, var(--cuban-red));
+  color: white;
+  border: none;
+  border-radius: var(--r-sm);
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: opacity var(--t-fast), transform var(--t-fast);
+  box-shadow: 0 4px 12px rgba(207,20,43,0.4);
+}
+
+.btn-danger:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+/* ===== TOGGLE BUTTON ===== */
+.toggle-btn {
+  padding: 8px 22px;
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  transition: all var(--t-fast);
+  min-width: 62px;
+}
+
+.toggle-btn.on {
+  background: rgba(27,77,46,0.8);
+  border-color: var(--gold);
+  color: var(--gold-light);
+  box-shadow: 0 0 8px rgba(201,168,76,0.2);
+}
+
+/* ===== SELECT ===== */
+.setting-select {
+  background: var(--mahogany-mid);
+  color: var(--text-light);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.setting-select:focus {
+  outline: 1px solid var(--gold);
+}
+
+/* ===== SETTINGS ===== */
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+  padding: 0 var(--gap-lg);
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--gap-sm) 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.setting-label {
+  font-size: 0.95rem;
+  color: var(--text-light);
+}
+
+.version-text {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-top: var(--gap-lg);
+}
+
+/* ===== HOW TO PLAY ===== */
+.rules-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-md);
+  padding: 0 var(--gap-lg) var(--gap-xl);
+}
+
+.rule-card {
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.18);
+  border-radius: var(--r-md);
+  padding: var(--gap-md) var(--gap-lg);
+}
+
+.rule-card h3 {
+  font-family: var(--font-heading);
+  color: var(--gold-light);
+  font-size: 1rem;
+  margin-bottom: var(--gap-sm);
+}
+
+.rule-card p {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.rule-card.cuban-rule {
+  border-color: rgba(207,20,43,0.5);
+  background: rgba(207,20,43,0.07);
+}
+
+.rule-card.cuban-rule h3 {
+  color: #FF7B87;
+}
+
+/* ===== UTILITIES ===== */
+.hidden { display: none !important; }
+
+/* ===== FORMAT BAR ===== */
+.format-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  flex-wrap: wrap;
+  padding: var(--gap-sm) var(--gap-lg);
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid rgba(201,168,76,0.15);
+  width: 100%;
+}
+
+.format-label {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.format-btn {
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  border: 1px solid rgba(201,168,76,0.3);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+}
+
+.format-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.format-btn.active {
+  background: rgba(201,168,76,0.15);
+  border-color: var(--gold);
+  color: var(--gold-light);
+  font-weight: 700;
+}

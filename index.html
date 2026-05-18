@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1A0D07">
+  <title>ArtsDominos — Cuban Double-Nine</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Lato:wght@300;400;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/menu.css">
+</head>
+<body>
+
+  <div class="hall-bg"></div>
+  <div class="hall-vignette"></div>
+
+  <!-- ===== SCREEN: Main Menu ===== -->
+  <div id="screen-menu" class="screen active">
+    <div class="menu-container">
+
+      <header class="logo-area">
+        <div class="domino-emblem">
+          <div class="emblem-tile left">
+            <div class="emblem-half"><span class="pip"></span><span class="pip"></span></div>
+            <div class="emblem-divider"></div>
+            <div class="emblem-half"><span class="pip"></span></div>
+          </div>
+          <div class="emblem-star">✦</div>
+          <div class="emblem-tile right">
+            <div class="emblem-half"><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="emblem-divider"></div>
+            <div class="emblem-half"><span class="pip"></span><span class="pip"></span></div>
+          </div>
+        </div>
+        <h1 class="game-title">ArtsDominos</h1>
+        <p class="game-subtitle">Cuban Double-Nine</p>
+        <div class="gold-rule"></div>
+      </header>
+
+      <nav class="main-nav">
+        <button class="btn-primary" onclick="App.startModeSelect('1v1')">Play 1 vs 1</button>
+        <button class="btn-primary" onclick="App.startModeSelect('teams')">Play Teams · 2 vs 2</button>
+        <div class="gold-rule narrow"></div>
+        <button class="btn-secondary" onclick="App.showScreen('screen-howtoplay')">How to Play</button>
+        <button class="btn-secondary" onclick="App.showScreen('screen-settings')">Settings</button>
+      </nav>
+
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: Character / Opponent Select ===== -->
+  <div id="screen-play-select" class="screen">
+    <div class="play-select-container">
+
+      <div class="screen-header">
+        <button class="btn-back" onclick="App.showScreen('screen-menu')">&#8592; Back</button>
+        <h2 id="select-title">Choose Your Opponent</h2>
+      </div>
+
+      <div class="format-bar">
+        <span class="format-label">Match Format:</span>
+        <button class="format-btn active" data-format="rounds">First to Empty Hand</button>
+        <button class="format-btn" data-format="points">First to 100 pts</button>
+        <button class="format-btn" data-format="bestof3">Best of 3</button>
+      </div>
+
+      <div class="character-grid" id="character-grid">
+        <!-- Populated by characters.js + main.js -->
+      </div>
+
+      <div id="partner-section" class="partner-section hidden">
+        <div class="gold-rule"></div>
+        <h3 class="partner-title">Choose Your Partner</h3>
+        <div class="character-grid small" id="partner-grid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: How to Play ===== -->
+  <div id="screen-howtoplay" class="screen">
+    <div class="content-container">
+      <div class="screen-header">
+        <button class="btn-back" onclick="App.showScreen('screen-menu')">&#8592; Back</button>
+        <h2>Cuban Double-Nine Rules</h2>
+      </div>
+      <div class="rules-scroll">
+        <div class="rule-card">
+          <h3>The Set</h3>
+          <p>55 tiles ranging from [0|0] to [9|9]. Each player draws <strong>10 tiles</strong> to start a 1v1 game, or <strong>7 tiles</strong> each in team play.</p>
+        </div>
+        <div class="rule-card">
+          <h3>First Move</h3>
+          <p>The player holding the highest double ([9|9] if in hand, otherwise [8|8], etc.) leads the first round. They must play that double to open the game.</p>
+        </div>
+        <div class="rule-card">
+          <h3>Playing a Tile</h3>
+          <p>Match a pip number on your tile to the open end of the chain. Tiles extend left or right from the ends only.</p>
+        </div>
+        <div class="rule-card cuban-rule">
+          <h3>&#127464;&#127482; Cuban Rule — No Drawing</h3>
+          <p>If you have no valid move, you <strong>pass your turn immediately</strong>. There is no boneyard to draw from in Cuban rules.</p>
+        </div>
+        <div class="rule-card">
+          <h3>Winning a Round</h3>
+          <p>First player (or team) to empty their hand wins. They score the total pips remaining in all opponents' hands.</p>
+        </div>
+        <div class="rule-card">
+          <h3>Blocked Game</h3>
+          <p>If all players pass consecutively, the board is blocked. The player/team with the <strong>lowest pip total</strong> wins and scores the difference between all other hands and their own.</p>
+        </div>
+        <div class="rule-card">
+          <h3>Match Formats</h3>
+          <p><strong>Round Win:</strong> Single round, winner takes all.<br>
+             <strong>First to 100:</strong> Play multiple rounds; accumulate points until someone hits 100.<br>
+             <strong>Best of 3:</strong> First to win 2 rounds wins the match.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: Settings ===== -->
+  <div id="screen-settings" class="screen">
+    <div class="content-container">
+      <div class="screen-header">
+        <button class="btn-back" onclick="App.showScreen('screen-menu')">&#8592; Back</button>
+        <h2>Settings</h2>
+      </div>
+      <div class="settings-list">
+        <div class="setting-row">
+          <label class="setting-label">Sound Effects</label>
+          <button class="toggle-btn" id="toggle-sfx" onclick="App.toggleSetting('sfx')">ON</button>
+        </div>
+        <div class="setting-row">
+          <label class="setting-label">Music</label>
+          <button class="toggle-btn" id="toggle-music" onclick="App.toggleSetting('music')">ON</button>
+        </div>
+        <div class="setting-row">
+          <label class="setting-label">AI Think Speed</label>
+          <select class="setting-select" id="ai-speed" onchange="App.saveSetting('aiSpeed', this.value)">
+            <option value="fast">Fast</option>
+            <option value="normal" selected>Normal</option>
+            <option value="slow">Slow · Dramatic</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <label class="setting-label">Show Pip Hints</label>
+          <button class="toggle-btn" id="toggle-hints" onclick="App.toggleSetting('hints')">ON</button>
+        </div>
+        <div class="gold-rule"></div>
+        <div class="setting-row">
+          <label class="setting-label">Reset All Progress</label>
+          <button class="btn-danger" onclick="App.confirmReset()">Reset</button>
+        </div>
+        <p class="version-text">ArtsDominos v0.1.0 · Cuban Double-Nine</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Match Start Overlay ===== -->
+  <div id="match-overlay" class="match-overlay hidden">
+    <div class="match-overlay-card">
+      <div class="overlay-vs-row">
+        <div class="overlay-player">
+          <div class="overlay-portrait-ring you">YOU</div>
+        </div>
+        <div class="overlay-vs">VS</div>
+        <div class="overlay-player" id="overlay-opponent">
+          <div class="overlay-portrait-ring npc" id="overlay-npc-img"></div>
+          <div class="overlay-npc-name" id="overlay-npc-name"></div>
+        </div>
+      </div>
+      <div class="overlay-format" id="overlay-format"></div>
+      <button class="btn-primary" onclick="App.launchGame()">Let's Play!</button>
+      <button class="btn-secondary" onclick="App.cancelOverlay()">Change Opponent</button>
+    </div>
+  </div>
+
+  <script src="js/storage.js"></script>
+  <script src="js/characters.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
