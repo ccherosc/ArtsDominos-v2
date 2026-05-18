@@ -293,8 +293,8 @@
   box-shadow: 0 -6px 28px rgba(0,0,0,0.6);
   display: flex;
   flex-direction: column;
-  min-height: 175px;
-  max-height: 215px;
+  min-height: 135px;
+  max-height: 170px;
   z-index: 20;
 }
 
@@ -302,9 +302,9 @@
   flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: var(--gap-sm) var(--gap-md);
+  padding: 6px 8px;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
 
 .hand-scroll-wrap::-webkit-scrollbar {
@@ -313,38 +313,39 @@
 
 .hand-tiles {
   display: flex;
-  gap: var(--gap-sm);
+  gap: 2px;
   align-items: center;
   height: 100%;
-  padding: 0 var(--gap-sm);
+  justify-content: center;
 }
 
 /* ===== HAND TILE ELEMENTS ===== */
 .hand-tile {
   position: relative;
   flex-shrink: 0;
-  border-radius: 6px;
+  border-radius: 5px;
   background: var(--tile-cream);
-  border: 2px solid var(--tile-border);
+  border: 1.5px solid var(--tile-border);
   box-shadow: var(--shadow-tile);
   cursor: grab;
   transition: transform var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast);
   touch-action: none;
-  width: 52px;
-  height: 100px;
+  width: 32px;
+  height: 62px;
 }
 
 .hand-tile:hover {
-  transform: translateY(-6px);
+  transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.6);
 }
 
 .hand-tile.selected {
-  transform: translateY(-10px);
+  transform: translateY(-8px);
   border-color: var(--gold);
+  border-width: 2px;
   box-shadow:
-    0 12px 28px rgba(0,0,0,0.7),
-    0 0 16px rgba(201,168,76,0.5);
+    0 10px 24px rgba(0,0,0,0.7),
+    0 0 14px rgba(201,168,76,0.5);
 }
 
 .hand-tile.valid-move {
@@ -617,14 +618,21 @@
 }
 
 /* ===== RESPONSIVE ADJUSTMENTS ===== */
-@media (max-height: 700px) {
+@media (max-height: 640px) {
+  .game-topbar  { height: 52px; min-height: 52px; }
+  .hand-area    { min-height: 110px; max-height: 140px; }
+  .topbar-portrait, .you-avatar { width: 36px; height: 36px; }
+  .hand-tile    { width: 28px; height: 54px; }
+}
+
+@media (max-height: 700px) and (min-height: 641px) {
   .game-topbar  { height: 58px; min-height: 58px; }
-  .hand-area    { min-height: 155px; max-height: 185px; }
+  .hand-area    { min-height: 125px; max-height: 155px; }
   .topbar-portrait, .you-avatar { width: 40px; height: 40px; }
-  .hand-tile    { width: 46px; height: 90px; }
 }
 
 @media (min-width: 768px) {
-  .hand-tile { width: 60px; height: 116px; }
-  .hand-area { min-height: 195px; max-height: 240px; }
+  .hand-tile { width: 48px; height: 94px; }
+  .hand-area { min-height: 165px; max-height: 210px; }
+  .hand-tiles { gap: 4px; }
 }

@@ -18,11 +18,16 @@ const Render = (() => {
   let panX = 0, panY = 0;
 
   // Board tile dimensions (logical px, before dpr scaling)
-  const TILE_LONG  = 108; // non-double tile width  / double tile height
-  const TILE_SHORT = 52;  // non-double tile height / double tile width
-  const TILE_R     = 7;   // corner radius
-  const PIP_R      = 4.8; // pip circle radius (board)
-  const GAP        = 6;   // gap between tiles on board
+  const TILE_LONG  = 108;
+  const TILE_SHORT = 52;
+  const TILE_R     = 7;
+  const PIP_R      = 4.8;
+  const GAP        = 6;
+
+  // Zoom
+  let zoom = 1.0;
+  const MIN_ZOOM = 0.25;
+  const MAX_ZOOM = 4.0;
 
   function init(canvasEl) {
     canvas = canvasEl;
@@ -49,6 +54,7 @@ const Render = (() => {
     ctx.clearRect(0, 0, W, H);
     ctx.save();
     ctx.translate(panX, panY);
+    ctx.scale(zoom, zoom);
 
     if (state.board.length === 0) {
       _drawEmptyHint();
@@ -194,7 +200,7 @@ const Render = (() => {
     4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]],
     5: [[0.28, 0.28], [0.72, 0.28], [0.5,  0.5],  [0.28, 0.72], [0.72, 0.72]],
     6: [[0.28, 0.2],  [0.72, 0.2],  [0.28, 0.5],  [0.72, 0.5],  [0.28, 0.8],  [0.72, 0.8]],
-    7: [[0.22, 0.18], [0.5,  0.18], [0.78, 0.18], [0.5,  0.5],  [0.22, 0.82], [0.5,  0.82], [0.78, 0.82]],
+    7: [[0.28, 0.18], [0.72, 0.18], [0.28, 0.5],  [0.5,  0.5],  [0.72, 0.5],  [0.28, 0.82], [0.72, 0.82]],
     8: [[0.22, 0.18], [0.5,  0.18], [0.78, 0.18], [0.22, 0.5],  [0.78, 0.5],  [0.22, 0.82], [0.5,  0.82], [0.78, 0.82]],
     9: [[0.22, 0.16], [0.5,  0.16], [0.78, 0.16], [0.22, 0.5],  [0.5,  0.5],  [0.78, 0.5],  [0.22, 0.84], [0.5,  0.84], [0.78, 0.84]],
   };
@@ -263,8 +269,10 @@ const Render = (() => {
   }
 
   function _createHandTileEl(tile) {
-    const tileW = window.innerWidth < 768 ? 52 : 60;
-    const tileH = window.innerWidth < 768 ? 100 : 116;
+    const isTablet = window.innerWidth >= 768;
+    const isShort  = window.innerHeight < 640;
+    const tileW = isTablet ? 48 : isShort ? 28 : 32;
+    const tileH = isTablet ? 94 : isShort ? 54 : 62;
     const scale = window.devicePixelRatio || 1;
 
     const el = document.createElement('canvas');
@@ -285,8 +293,8 @@ const Render = (() => {
 
   function _drawHandTile(tctx, tile, w, h) {
     const hH   = h / 2;
-    const pipR = 4.2;
-    const r    = TILE_R;
+    const pipR = Math.max(1.8, Math.min(4.2, w * 0.085));
+    const r    = Math.min(TILE_R, w * 0.18);
 
     // Base — warm ivory
     _rrOnCtx(tctx, 1, 1, w - 2, h - 2, r);
@@ -294,39 +302,43 @@ const Render = (() => {
     tctx.fill();
 
     // Horizontal dividing line
+    const pad = Math.max(2, w * 0.1);
     tctx.beginPath();
-    tctx.moveTo(6, hH);
-    tctx.lineTo(w - 6, hH);
+    tctx.moveTo(pad, hH);
+    tctx.lineTo(w - pad, hH);
     tctx.strokeStyle = '#A0895A';
-    tctx.lineWidth = 1.5;
+    tctx.lineWidth = 1;
     tctx.stroke();
 
     // Pips — top half (a) and bottom half (b)
     tctx.fillStyle = '#1A1008';
     const pA = PIP_POSITIONS[tile.a] || [];
     const pB = PIP_POSITIONS[tile.b] || [];
-    const iW = w - 6;
-    const iH = hH - 6;
+    const p  = Math.max(2, w * 0.08);
+    const iW = w - p * 2;
+    const iH = hH - p * 2;
 
     pA.forEach(([rx, ry]) => {
       tctx.beginPath();
-      tctx.arc(3 + rx * iW, 3 + ry * iH, pipR, 0, Math.PI * 2);
+      tctx.arc(p + rx * iW, p + ry * iH, pipR, 0, Math.PI * 2);
       tctx.fill();
     });
     pB.forEach(([rx, ry]) => {
       tctx.beginPath();
-      tctx.arc(3 + rx * iW, hH + 3 + ry * iH, pipR, 0, Math.PI * 2);
+      tctx.arc(p + rx * iW, hH + p + ry * iH, pipR, 0, Math.PI * 2);
       tctx.fill();
     });
 
-    // Count label for 7-9
-    const fs = Math.floor(hH * 0.24);
-    tctx.font = `700 ${fs}px Lato, sans-serif`;
-    tctx.fillStyle = 'rgba(0,0,0,0.3)';
-    tctx.textAlign = 'right';
-    tctx.textBaseline = 'top';
-    if (tile.a >= 7) tctx.fillText(tile.a, w - 5, 3);
-    if (tile.b >= 7) tctx.fillText(tile.b, w - 5, hH + 3);
+    // Count label for 7-9 (only when tile is large enough to show it clearly)
+    if (hH >= 24) {
+      const fs = Math.max(6, Math.floor(hH * 0.22));
+      tctx.font = `700 ${fs}px Lato, sans-serif`;
+      tctx.fillStyle = 'rgba(0,0,0,0.28)';
+      tctx.textAlign = 'right';
+      tctx.textBaseline = 'top';
+      if (tile.a >= 7) tctx.fillText(tile.a, w - 3, 2);
+      if (tile.b >= 7) tctx.fillText(tile.b, w - 3, hH + 2);
+    }
 
     // Border
     _rrOnCtx(tctx, 1, 1, w - 2, h - 2, r);
@@ -365,10 +377,24 @@ const Render = (() => {
     c.closePath();
   }
 
-  // ── Pan control ────────────────────────────────────
+  // ── Pan / zoom control ─────────────────────────────
 
   function pan(dx, dy) { panX += dx; panY += dy; }
-  function resetPan()  { panX = W / 2; panY = H / 2; }
+
+  function zoomAt(factor, cx, cy) {
+    const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom * factor));
+    if (newZoom === zoom) return;
+    const scale = newZoom / zoom;
+    panX = cx - (cx - panX) * scale;
+    panY = cy - (cy - panY) * scale;
+    zoom = newZoom;
+  }
+
+  function resetPan() {
+    panX = W / 2;
+    panY = H / 2;
+    zoom = 1.0;
+  }
 
   return {
     init,
@@ -376,6 +402,7 @@ const Render = (() => {
     drawBoard,
     renderHandTiles,
     pan,
+    zoomAt,
     resetPan,
   };
 
