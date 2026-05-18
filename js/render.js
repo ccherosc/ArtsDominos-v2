@@ -43,8 +43,47 @@ const Render = (() => {
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
+    // Reset view — fitChain() will override pan/zoom after resize
     panX = W / 2;
     panY = H / 2;
+    zoom = 1.0;
+  }
+
+  // Auto-zoom + center so the current chain fills the viewport comfortably
+  function fitChain(state) {
+    panX = W / 2;
+    panY = H / 2;
+
+    if (!state || state.board.length === 0) {
+      // Empty board: give landscape a slight zoom-in so the opening move isn't tiny
+      zoom = (W > H) ? 1.5 : 1.0;
+      return;
+    }
+
+    const center     = state.board.find(t => t.end === 'center');
+    const leftTiles  = state.board.filter(t => t.end === 'left').reverse();
+    const rightTiles = state.board.filter(t => t.end === 'right');
+    const ordered    = [...leftTiles, center, ...rightTiles].filter(Boolean);
+
+    let chainW = 0;
+    ordered.forEach((bt, i) => {
+      const tw = (bt.tile.isDouble || bt.end === 'center') ? TILE_SHORT : TILE_LONG;
+      chainW += tw + (i < ordered.length - 1 ? GAP : 0);
+    });
+    const hasDouble = ordered.some(bt => bt.tile.isDouble || bt.end === 'center');
+    const chainH    = hasDouble ? TILE_LONG : TILE_SHORT;
+
+    // Fit chain to 80% of canvas width OR 68% of canvas height, whichever is tighter
+    const zoomByW = (W * 0.80) / (chainW + 80);
+    const zoomByH = (H * 0.68) / (chainH + 40);
+    zoom = Math.min(3.0, Math.max(0.4, Math.min(zoomByW, zoomByH)));
+  }
+
+  // Clear hand tile DOM elements so renderHandTiles recreates them at current viewport size
+  function rebuildHand() {
+    const container = document.getElementById('hand-tiles');
+    if (!container) return;
+    [...container.children].forEach(el => el.remove());
   }
 
   // ── Main draw entry point ──────────────────────────
@@ -405,6 +444,8 @@ const Render = (() => {
     pan,
     zoomAt,
     resetPan,
+    fitChain,
+    rebuildHand,
   };
 
 })();

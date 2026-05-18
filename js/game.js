@@ -66,6 +66,7 @@ function initGame() {
   }[state.format] || '';
 
   _refreshUI();
+  Render.fitChain(state);
   Render.drawBoard(state);
   Sound.shuffle();
 
@@ -231,11 +232,15 @@ function _showResult(result) {
     }
     setTimeout(() => won ? Sound.win() : Sound.lose(), 300);
 
+    // Running record vs this opponent (already updated above)
+    const rec = opp ? Storage.getRecord(opp.id) : null;
+    const recStr = rec ? `  ·  vs ${opp.name}: ${rec.wins}W – ${rec.losses}L` : '';
+
     document.getElementById('match-result-icon').textContent  = won ? '🏆' : '😔';
     document.getElementById('match-result-title').textContent = won ? 'You Win the Match!' : 'You Lost the Match';
     document.getElementById('match-result-detail').textContent = Scoring.roundResultText(state, result);
     document.getElementById('match-result-scores').textContent =
-      `You: ${state.matchScores[0]} pts · ${state.players[1]?.name}: ${state.matchScores[1] || 0} pts`;
+      `You: ${state.matchScores[0]} pts · ${state.players[1]?.name}: ${state.matchScores[1] || 0} pts${recStr}`;
     document.getElementById('match-over-overlay').classList.remove('hidden');
 
   } else {
@@ -286,8 +291,10 @@ const GameUI = {
     _hideEndPicker();
     Engine.startNewRound(state);
     _refreshUI();
-    Render.resetPan();
+    Render.rebuildHand();
+    Render.fitChain(state);
     Render.drawBoard(state);
+    _refreshHand();
     Sound.shuffle();
     if (!state.players[state.currentPlayer].isHuman) _scheduleAITurn();
   },
@@ -297,8 +304,10 @@ const GameUI = {
     _hideEndPicker();
     Engine.startNewRound(state);
     _refreshUI();
-    Render.resetPan();
+    Render.rebuildHand();
+    Render.fitChain(state);
     Render.drawBoard(state);
+    _refreshHand();
     Sound.shuffle();
     if (!state.players[state.currentPlayer].isHuman) _scheduleAITurn();
   },
@@ -309,8 +318,10 @@ const GameUI = {
     state = Engine.createGameState(players, Params.format || 'rounds');
     window._gameState = state;
     _refreshUI();
-    Render.resetPan();
+    Render.rebuildHand();
+    Render.fitChain(state);
     Render.drawBoard(state);
+    _refreshHand();
     Sound.shuffle();
     if (!state.players[state.currentPlayer].isHuman) _scheduleAITurn();
   },
@@ -334,9 +345,19 @@ window.addEventListener('DOMContentLoaded', () => {
   Render.init(canvas);
   Input.init(canvas, handTiles);
 
+  let _resizeTimer = null;
   window.addEventListener('resize', () => {
-    Render.resize();
-    if (state) Render.drawBoard(state);
+    // Debounce: wait until orientation change settles before rebuilding
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(() => {
+      Render.resize();
+      Render.rebuildHand();
+      if (state) {
+        Render.fitChain(state);
+        Render.drawBoard(state);
+        _refreshHand();
+      }
+    }, 200);
   });
 
   initGame();
