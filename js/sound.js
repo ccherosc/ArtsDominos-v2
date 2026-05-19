@@ -90,14 +90,17 @@ const Sound = (() => {
     }
   }
 
-  // Soft lower-register knock — player passes their turn
+  // Knock-knock — two raps on the table when a player passes
   function pass() {
     if (!_on) return;
     try {
       const ctx = _ac();
       const t   = ctx.currentTime;
-      _noise(ctx, 0.12, 0.3, 0.18, 280, 0.6, t);
-      _tone(ctx, 220, 'sine', 0.08, 0.14, t);
+      // Each knock: sharp click transient + hollow wood body resonance
+      _noise(ctx, 0.05, 0.55, 0.05, 1100, 0.9, t);
+      _noise(ctx, 0.16, 0.48, 0.14,  250, 3.0, t);
+      _noise(ctx, 0.05, 0.46, 0.05, 1100, 0.9, t + 0.21);
+      _noise(ctx, 0.16, 0.40, 0.14,  250, 3.0, t + 0.21);
     } catch (_) {}
   }
 
