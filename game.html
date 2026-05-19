@@ -138,6 +138,7 @@
       <div class="result-scores" id="result-scores"></div>
       <div class="gold-rule"></div>
       <button class="btn-primary" id="result-next-btn" onclick="GameUI.nextRound()">Next Round</button>
+      <button class="btn-secondary" onclick="GameUI.showRecap(true)">Round Recap</button>
       <button class="btn-secondary" onclick="window.location.href='index.html'">Main Menu</button>
     </div>
   </div>
@@ -152,7 +153,21 @@
       <div class="result-scores" id="match-result-scores"></div>
       <div class="gold-rule"></div>
       <button class="btn-primary" onclick="GameUI.rematch()">Rematch</button>
+      <button class="btn-secondary" onclick="GameUI.showRecap()">Game Recap</button>
       <button class="btn-secondary" onclick="window.location.href='index.html'">Main Menu</button>
+    </div>
+  </div>
+
+  <!-- ===== GAME RECAP OVERLAY ===== -->
+  <div class="result-overlay hidden" id="recap-overlay">
+    <div class="recap-card">
+      <h2 class="result-title">Game Recap</h2>
+      <div class="gold-rule"></div>
+      <pre class="recap-text" id="recap-text"></pre>
+      <div class="recap-actions">
+        <button class="btn-primary" onclick="GameUI.downloadRecap()">Download .txt</button>
+        <button class="btn-secondary" onclick="GameUI.closeRecap()">Close</button>
+      </div>
     </div>
   </div>
 

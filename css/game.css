@@ -569,6 +569,50 @@
   font-weight: 700;
 }
 
+/* ===== GAME RECAP ===== */
+.recap-card {
+  background: linear-gradient(160deg, #2C1810 0%, #1A0D07 100%);
+  border: 2px solid var(--gold);
+  border-radius: var(--r-lg);
+  padding: var(--gap-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-md);
+  width: min(96vw, 660px);
+  max-height: 88vh;
+  box-shadow: var(--shadow-gold-lg), var(--shadow-deep);
+  text-align: center;
+}
+
+.recap-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.72rem;
+  white-space: pre;
+  overflow-y: auto;
+  overflow-x: auto;
+  width: 100%;
+  flex: 1;
+  line-height: 1.6;
+  color: var(--text-light);
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.38);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--gold-dim);
+  text-align: left;
+  min-height: 180px;
+}
+
+.recap-actions {
+  display: flex;
+  gap: var(--gap-sm);
+  width: 100%;
+}
+
+.recap-actions > button {
+  flex: 1;
+}
+
 /* ===== AI THINKING INDICATOR ===== */
 .ai-thinking {
   position: absolute;

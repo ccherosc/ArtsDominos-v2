@@ -33,7 +33,90 @@ function buildPlayers(params) {
 let state = null;
 let _pendingTile = null;
 let _quoteTimer  = null;
+let _recapData   = null;
 const players = buildPlayers(Params);
+
+// ── Game Recap ───────────────────────────────────────
+
+function _recapInit() {
+  const opp = state.players.find(p => !p.isHuman);
+  const fmt = { rounds: 'Single Round', points: 'First to 100 pts', bestof3: 'Best of 3' };
+  _recapData = {
+    oppName:     opp?.name || 'CPU',
+    formatLabel: fmt[state.format] || state.format,
+    date:        new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    rounds:      [],
+  };
+  _recapStartRound();
+}
+
+function _recapStartRound() {
+  if (!_recapData) return;
+  _recapData.rounds.push({
+    num:          state.roundNumber,
+    startingHands: state.players.map((p, i) => ({
+      name:  p.name,
+      tiles: state.hands[i].map(t => `${t.a}|${t.b}`),
+    })),
+    moves:  [],
+    result: null,
+  });
+}
+
+function _recapRecord(playerIndex, tile, end) {
+  if (!_recapData || !_recapData.rounds.length) return;
+  _recapData.rounds[_recapData.rounds.length - 1].moves.push({
+    name:   state.players[playerIndex].name,
+    tile:   tile ? `${tile.a}|${tile.b}` : null,
+    end,
+    passed: !tile,
+  });
+}
+
+function _buildRecapText() {
+  if (!_recapData) return 'No recap available.';
+  const { oppName, formatLabel, date, rounds } = _recapData;
+  const W   = 52;
+  const bar = '='.repeat(W);
+  const L   = [];
+
+  L.push('ARTSDOMINOS  ·  GAME RECAP');
+  L.push(bar);
+  L.push(`You vs. ${oppName}  |  ${formatLabel}  |  ${date}`);
+  L.push('');
+
+  rounds.forEach(round => {
+    L.push(bar);
+    L.push(` ROUND ${round.num}`);
+    L.push(bar);
+    L.push('');
+    L.push('STARTING HANDS');
+    round.startingHands.forEach(({ name, tiles }) => {
+      L.push(`  ${(name + ' :').padEnd(12)}  ${tiles.map(t => `[${t}]`).join(' ')}`);
+    });
+    L.push('');
+    L.push('MOVE LOG');
+    round.moves.forEach((m, i) => {
+      const num    = `${i + 1}.`.padStart(5);
+      const name   = m.name.padEnd(10);
+      const action = m.passed          ? 'PASS'
+                   : m.end === 'first' ? `opens with [${m.tile}]`
+                   : m.end === 'left'  ? `plays [${m.tile}]  <- left`
+                                       : `plays [${m.tile}]  right ->`;
+      L.push(`  ${num}  ${name}  ${action}`);
+    });
+    if (round.result) {
+      L.push('');
+      L.push(`RESULT:  ${round.result}`);
+    }
+    L.push('');
+  });
+
+  L.push(bar);
+  L.push(`FINAL SCORE:  You: ${state.matchScores[0]} pts  |  ${oppName}: ${state.matchScores[1] || 0} pts`);
+  L.push(bar);
+  return L.join('\n');
+}
 
 function _showEndPicker() {
   document.getElementById('end-select-bar').classList.remove('hidden');
@@ -90,6 +173,7 @@ function _quoteForMove(result) {
 function initGame() {
   Sound.init();
   state = Engine.createGameState(players, Params.format || 'rounds');
+  _recapInit();
   window._gameState = state; // exposed for input.js pan redraws
 
   const opp = CharacterDB.getById(Params.opponent);
@@ -136,6 +220,17 @@ function _scheduleAITurn() {
 
 function _handleMoveResult(result, moverIsHuman = true) {
   if (!result.ok) return;
+
+  // Record move for recap before any state display updates
+  if (_recapData) {
+    if (result.passed || result.blocked) {
+      const pi = moverIsHuman ? 0 : state.players.findIndex(p => !p.isHuman);
+      _recapRecord(pi, null, null);
+    } else if (state.lastMove) {
+      const lm = state.lastMove;
+      _recapRecord(lm.playerIndex, lm.tile, lm.end);
+    }
+  }
 
   result.passed ? Sound.pass() : Sound.clack();
 
@@ -298,6 +393,11 @@ function _refreshPassButton() {
 // ── Round / match results ────────────────────────────
 
 function _showResult(result) {
+  // Save round result line into recap
+  if (_recapData && _recapData.rounds.length > 0) {
+    _recapData.rounds[_recapData.rounds.length - 1].result = Scoring.roundResultText(state, result);
+  }
+
   const isMatch = state.status === 'match_over';
 
   if (isMatch) {
@@ -381,6 +481,7 @@ const GameUI = {
     Render.cancelSnap();
     _hideEndPicker();
     Engine.startNewRound(state);
+    _recapStartRound();
     _refreshUI();
     Render.rebuildHand();
     Render.fitChain(state);
@@ -400,6 +501,9 @@ const GameUI = {
     Render.cancelSnap();
     _hideEndPicker();
     Engine.startNewRound(state);
+    // Replace the current round's recap data with a fresh entry
+    if (_recapData) _recapData.rounds.pop();
+    _recapStartRound();
     _refreshUI();
     Render.rebuildHand();
     Render.fitChain(state);
@@ -420,6 +524,7 @@ const GameUI = {
     _hideEndPicker();
     state = Engine.createGameState(players, Params.format || 'rounds');
     window._gameState = state;
+    _recapInit();
     _refreshUI();
     Render.rebuildHand();
     Render.fitChain(state);
@@ -441,6 +546,58 @@ const GameUI = {
     const btn = document.getElementById('pause-sfx-btn');
     if (btn) { btn.textContent = next ? 'SFX: ON' : 'SFX: OFF'; btn.classList.toggle('on', next); }
     if (next) Sound.clack();
+  },
+
+  showRecap(roundOnly = false) {
+    let text;
+    if (roundOnly && _recapData && _recapData.rounds.length > 0) {
+      const r   = _recapData.rounds[_recapData.rounds.length - 1];
+      const W   = 52;
+      const bar = '='.repeat(W);
+      const L   = [];
+      L.push(`ARTSDOMINOS  ·  ROUND ${r.num} RECAP`);
+      L.push(bar);
+      L.push(`You vs. ${_recapData.oppName}  |  ${_recapData.date}`);
+      L.push('');
+      L.push('STARTING HANDS');
+      r.startingHands.forEach(({ name, tiles }) => {
+        L.push(`  ${(name + ' :').padEnd(12)}  ${tiles.map(t => `[${t}]`).join(' ')}`);
+      });
+      L.push('');
+      L.push('MOVE LOG');
+      r.moves.forEach((m, i) => {
+        const num    = `${i + 1}.`.padStart(5);
+        const name   = m.name.padEnd(10);
+        const action = m.passed          ? 'PASS'
+                     : m.end === 'first' ? `opens with [${m.tile}]`
+                     : m.end === 'left'  ? `plays [${m.tile}]  <- left`
+                                         : `plays [${m.tile}]  right ->`;
+        L.push(`  ${num}  ${name}  ${action}`);
+      });
+      if (r.result) { L.push(''); L.push(`RESULT:  ${r.result}`); }
+      text = L.join('\n');
+    } else {
+      text = _buildRecapText();
+    }
+    document.getElementById('recap-text').textContent = text;
+    document.getElementById('recap-overlay').classList.remove('hidden');
+  },
+
+  closeRecap() {
+    document.getElementById('recap-overlay').classList.add('hidden');
+  },
+
+  downloadRecap() {
+    const text = _buildRecapText();
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `ArtsDominos_Recap_vs_${(_recapData?.oppName || 'CPU').replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   },
 };
 
