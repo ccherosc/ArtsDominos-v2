@@ -35,9 +35,9 @@
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    rgba(10,5,2,0.02) 0%,
-    rgba(10,5,2,0.04) 72%,
-    rgba(10,5,2,0.65) 91%,
+    rgba(10,5,2,0.00) 0%,
+    rgba(10,5,2,0.00) 78%,
+    rgba(10,5,2,0.72) 93%,
     #0f0603 100%
   );
 }
