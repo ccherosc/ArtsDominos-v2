@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#143D24">
-  <title>ArtsDominos — Playing</title>
+  <title>ArtsDominos v2 — Playing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
@@ -18,7 +18,6 @@
   <!-- ===== TOP BAR ===== -->
   <header class="game-topbar" id="game-topbar">
 
-    <!-- Opponent side (1v1) or Team display -->
     <div class="topbar-player opponent-side" id="topbar-opponent">
       <div class="topbar-portrait-wrap">
         <img class="topbar-portrait" id="opp-portrait" src="assets/characters/silhouette.svg" alt="Opponent">
@@ -33,16 +32,16 @@
       </div>
     </div>
 
-    <!-- Center: round + turn indicator -->
     <div class="topbar-center">
       <div class="turn-indicator" id="turn-indicator">
         <span class="turn-arrow" id="turn-arrow">&#9654;</span>
         <span class="turn-name" id="turn-name">Your Turn</span>
       </div>
-      <div class="round-badge" id="round-badge"><span id="round-num">Round 1</span> · <span id="format-badge">Single Round</span></div>
+      <div class="round-badge" id="round-badge">
+        <span id="round-num">Round 1</span> · <span id="format-badge">Single Round</span>
+      </div>
     </div>
 
-    <!-- Your side -->
     <div class="topbar-player your-side">
       <div class="topbar-info right-align">
         <div class="topbar-name">You</div>
@@ -53,38 +52,57 @@
       </div>
       <div class="topbar-portrait-wrap">
         <img class="topbar-portrait you-avatar" src="assets/characters/silhouette.svg" alt="You">
-        <div class="topbar-hand-count" id="your-hand-count">10</div>
+        <div class="topbar-hand-count you-count" id="your-hand-count">10</div>
       </div>
     </div>
 
-    <!-- Menu button -->
     <button class="game-menu-btn" onclick="GameUI.togglePause()" title="Menu">&#9776;</button>
-
   </header>
 
-  <!-- ===== TEAMS ROW (2v2 only, hidden in 1v1) ===== -->
-  <div class="teams-bar hidden" id="teams-bar">
-    <div class="team-slot" id="team-partner">
-      <img class="team-portrait" src="assets/characters/silhouette.svg" alt="Partner">
-      <span class="team-name" id="partner-name">Partner</span>
-      <span class="team-tiles" id="partner-tiles">10</span>
+  <!-- ===== OPPONENT TABLE AREA (tile backs visible above board) ===== -->
+  <!--
+    Shows the backs of every non-human player's tiles.
+    1v1:      one row at the top  (seat-north = the opponent)
+    4-player: north row = partner, side strips = opp1 (east) and opp2 (west)
+  -->
+  <div class="opp-table-zone" id="opp-table-zone">
+
+    <!-- NORTH seat: 1v1 opponent OR 4-player partner -->
+    <div class="seat-row seat-north" id="seat-north">
+      <span class="seat-tag" id="seat-north-tag"></span>
+      <div class="tile-backs-row" id="backs-north"></div>
     </div>
-    <div class="team-divider">&#9866;</div>
-    <div class="team-slot" id="team-opp2">
-      <img class="team-portrait" src="assets/characters/silhouette.svg" alt="Opp 2">
-      <span class="team-name" id="opp2-name">Opp 2</span>
-      <span class="team-tiles" id="opp2-tiles">10</span>
-    </div>
+
   </div>
 
-  <!-- Opponent speech bubble — shown on doubles, passes, round wins -->
+  <!-- Opponent speech bubble -->
   <div class="opp-quote-bubble hidden" id="opp-quote"></div>
 
-  <!-- ===== GAME BOARD CANVAS ===== -->
-  <main class="board-wrap" id="board-wrap">
-    <canvas id="game-canvas"></canvas>
-    <div class="board-hint" id="board-hint">Tap a tile in your hand, then tap where to place it</div>
-  </main>
+  <!-- ===== GAME SCENE: side zones + board ===== -->
+  <div class="game-scene" id="game-scene">
+
+    <!-- WEST seat (4-player only, opp2) -->
+    <div class="seat-side seat-west hidden" id="seat-west">
+      <span class="seat-tag seat-tag-vert" id="seat-west-tag"></span>
+      <div class="tile-backs-col" id="backs-west"></div>
+    </div>
+
+    <!-- CENTER: table rail + canvas -->
+    <div class="board-outer" id="board-outer">
+      <div class="table-far-rail"></div>
+      <main class="board-wrap" id="board-wrap">
+        <canvas id="game-canvas"></canvas>
+        <div class="board-hint" id="board-hint">Tap a tile in your hand, then tap where to place it</div>
+      </main>
+    </div>
+
+    <!-- EAST seat (4-player only, opp1) -->
+    <div class="seat-side seat-east hidden" id="seat-east">
+      <div class="tile-backs-col" id="backs-east"></div>
+      <span class="seat-tag seat-tag-vert" id="seat-east-tag"></span>
+    </div>
+
+  </div>
 
   <!-- ===== END SELECTION BAR ===== -->
   <div class="end-select-bar hidden" id="end-select-bar">
@@ -95,13 +113,11 @@
 
   <!-- ===== PLAYER HAND ===== -->
   <footer class="hand-area" id="hand-area">
-
     <div class="hand-scroll-wrap">
       <div class="hand-tiles" id="hand-tiles">
         <!-- Tile elements injected by render.js -->
       </div>
     </div>
-
     <div class="hand-actions">
       <button class="pass-btn" id="pass-btn" onclick="GameUI.playerPass()" disabled>
         <span class="pass-icon">&#9646;&#9646;</span> Pass
@@ -113,7 +129,6 @@
         </div>
       </div>
     </div>
-
   </footer>
 
   <!-- ===== PAUSE / MENU OVERLAY ===== -->
@@ -171,7 +186,7 @@
     </div>
   </div>
 
-  <!-- Drag ghost: follows finger/cursor when dragging a hand tile -->
+  <!-- Drag ghost -->
   <canvas id="drag-ghost" style="position:fixed;display:none;pointer-events:none;z-index:200;opacity:0.82;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.7);"></canvas>
 
   <script src="js/storage.js"></script>

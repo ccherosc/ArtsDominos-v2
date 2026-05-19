@@ -198,45 +198,163 @@
   background: rgba(201,168,76,0.1);
 }
 
-/* ===== TEAMS BAR (2v2) ===== */
-.teams-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--gap-xs) var(--gap-lg);
-  background: rgba(10,5,2,0.7);
-  border-bottom: 1px solid rgba(201,168,76,0.15);
+/* ===== V2: OPPONENT TABLE ZONE (tile backs above the board) ===== */
+
+.opp-table-zone {
   flex-shrink: 0;
-}
-
-.team-slot {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: var(--gap-sm);
+  background: linear-gradient(180deg, rgba(10,5,2,0.85) 0%, rgba(20,13,7,0.6) 100%);
+  border-bottom: 2px solid rgba(92,53,32,0.8);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  padding: 6px var(--gap-sm) 8px;
+  position: relative;
+  z-index: 5;
 }
 
-.team-portrait {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--gold-dark);
+.seat-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
 }
 
-.team-name {
-  font-family: var(--font-heading);
-  font-size: 0.8rem;
-  color: var(--text-light);
-}
-
-.team-tiles {
-  font-size: 0.75rem;
+.seat-tag {
+  font-size: 0.58rem;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  font-family: var(--font-body);
+  line-height: 1;
 }
 
-.team-divider {
-  color: var(--gold-dark);
-  font-size: 1rem;
+/* Individual tile back — upright domino back, standing at far edge */
+.tile-back {
+  display: inline-block;
+  width: 17px;
+  height: 31px;
+  background: linear-gradient(160deg, #1c0e04 0%, #2e1609 55%, #1c0e04 100%);
+  border: 1px solid rgba(201,168,76,0.22);
+  border-radius: 3px;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow:
+    inset 0 1px 3px rgba(255,255,255,0.06),
+    inset 0 -1px 2px rgba(0,0,0,0.4),
+    0 2px 5px rgba(0,0,0,0.55),
+    0 0 0 0.5px rgba(0,0,0,0.6);
+}
+
+/* Subtle inner border to suggest the tile frame */
+.tile-back::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 0.5px solid rgba(201,168,76,0.14);
+  border-radius: 2px;
+}
+
+/* Center pip/diamond hint on the back */
+.tile-back::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 5px;
+  height: 5px;
+  border: 0.5px solid rgba(201,168,76,0.18);
+}
+
+.tile-backs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: 35px;
+  padding: 2px 4px;
+  max-width: 100%;
+}
+
+/* ===== V2: GAME SCENE (side zones + board, flex-row) ===== */
+
+.game-scene {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Side seat strips for 4-player mode */
+.seat-side {
+  flex-shrink: 0;
+  width: 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(10,5,2,0.45);
+  padding: 6px 0;
+}
+
+.seat-west {
+  border-right: 1px solid rgba(92,53,32,0.5);
+  box-shadow: inset -4px 0 12px rgba(0,0,0,0.25);
+}
+
+.seat-east {
+  border-left: 1px solid rgba(92,53,32,0.5);
+  box-shadow: inset 4px 0 12px rgba(0,0,0,0.25);
+}
+
+.seat-tag-vert {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+}
+
+/* Vertically stacked tile backs for side players */
+.tile-backs-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  overflow: hidden;
+  max-height: 100%;
+}
+
+.tile-backs-col .tile-back {
+  width: 16px;
+  height: 28px;
+}
+
+/* ===== V2: BOARD OUTER (table rail + canvas wrapper) ===== */
+
+.board-outer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* The mahogany rail at the far (top) edge — the "far side of the table" */
+.table-far-rail {
+  height: 10px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #6b3c1a 0%, #4a2810 60%, #2d1608 100%);
+  border-bottom: 1px solid rgba(0,0,0,0.7);
+  box-shadow:
+    0 3px 14px rgba(0,0,0,0.7),
+    inset 0 1px 3px rgba(255,255,255,0.08);
+  position: relative;
+  z-index: 3;
 }
 
 /* ===== BOARD / CANVAS ===== */
@@ -244,11 +362,14 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse at 50% 50%, var(--felt-highlight) 0%, var(--felt) 40%, var(--felt-dark) 100%);
-  /* Subtle felt texture */
+  /* Depth gradient: darker at top (far/opponent side) = perspective cue */
   background-image:
-    radial-gradient(ellipse at 50% 50%, #236438 0%, #1B4D2E 45%, #143D24 100%),
+    linear-gradient(to bottom,
+      rgba(0,0,0,0.32) 0%,
+      rgba(0,0,0,0.08) 35%,
+      rgba(0,0,0,0) 60%
+    ),
+    radial-gradient(ellipse at 50% 80%, #236438 0%, #1B4D2E 45%, #143D24 100%),
     repeating-linear-gradient(
       45deg,
       transparent,

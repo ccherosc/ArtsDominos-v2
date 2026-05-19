@@ -170,11 +170,34 @@ function _quoteForMove(result) {
   return null;
 }
 
+// V2: Configure seat labels and show/hide 4-player side zones
+function _initSeats() {
+  const is4p = state.players.length > 2;
+
+  // North seat tag: 1v1 = opponent name, 4-player = partner name
+  const northTag = document.getElementById('seat-north-tag');
+  if (northTag) northTag.textContent = is4p ? (state.players[2]?.name || '') : (state.players[1]?.name || '');
+
+  // Side zones (4-player only)
+  const seatWest = document.getElementById('seat-west');
+  const seatEast = document.getElementById('seat-east');
+  if (seatWest) seatWest.classList.toggle('hidden', !is4p);
+  if (seatEast) seatEast.classList.toggle('hidden', !is4p);
+
+  if (is4p) {
+    // East = player[1], West = player[3]
+    const eastTag = document.getElementById('seat-east-tag');
+    const westTag = document.getElementById('seat-west-tag');
+    if (eastTag) eastTag.textContent = state.players[1]?.name || '';
+    if (westTag) westTag.textContent = state.players[3]?.name || '';
+  }
+}
+
 function initGame() {
   Sound.init();
   state = Engine.createGameState(players, Params.format || 'rounds');
   _recapInit();
-  window._gameState = state; // exposed for input.js pan redraws
+  window._gameState = state;
 
   const opp = CharacterDB.getById(Params.opponent);
   if (opp) {
@@ -192,6 +215,9 @@ function initGame() {
     points:  'First to 100 pts',
     bestof3: 'Best of 3',
   }[state.format] || '';
+
+  // V2: set up seat labels and show/hide 4-player side zones
+  _initSeats();
 
   _refreshUI();
   Render.fitChain(state);
@@ -367,6 +393,9 @@ function _refreshUI() {
   const isYourTurn = state.players[state.currentPlayer].isHuman;
   document.getElementById('turn-name').textContent = isYourTurn ? 'Your Turn' : `${state.players[state.currentPlayer].name}'s Turn`;
   document.getElementById('turn-arrow').classList.toggle('flip', !isYourTurn);
+
+  // V2: update opponent tile backs
+  Render.renderOpponentBacks(state);
 
   _refreshHand();
   _refreshPassButton();

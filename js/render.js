@@ -577,6 +577,35 @@ const Render = (() => {
     zoom = 1.0;
   }
 
+  // ── V2: Opponent tile backs ────────────────────────
+
+  // Seat map: which backs container each non-human player fills.
+  // 1v1:      player[1] → backs-north
+  // 4-player: player[1] → backs-east (right side)
+  //           player[2] → backs-north (across)
+  //           player[3] → backs-west (left side)
+  function _backsContainerId(playerIndex, totalPlayers) {
+    if (totalPlayers === 2) return 'backs-north';
+    return { 1: 'backs-east', 2: 'backs-north', 3: 'backs-west' }[playerIndex] || null;
+  }
+
+  function renderOpponentBacks(state) {
+    ['backs-north', 'backs-east', 'backs-west'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '';
+    });
+
+    state.players.forEach((player, i) => {
+      if (player.isHuman) return;
+      const id = _backsContainerId(i, state.players.length);
+      if (!id) return;
+      const container = document.getElementById(id);
+      if (!container) return;
+      const count = state.hands[i]?.length ?? 0;
+      container.innerHTML = Array(count).fill('<div class="tile-back"></div>').join('');
+    });
+  }
+
   return {
     init,
     resize,
@@ -590,6 +619,7 @@ const Render = (() => {
     setPulse,
     startSnapAnim,
     cancelSnap,
+    renderOpponentBacks,
   };
 
 })();
