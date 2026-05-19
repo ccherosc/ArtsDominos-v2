@@ -239,8 +239,13 @@ InputEvents.onBoardTap = function(tileId) {
     return;
   }
 
-  const result = Engine.applyMove(state, 0, tile, validEnds[0]);
+  const handEl  = document.querySelector(`[data-tile-id="${tile.id}"]`);
+  const srcRect = handEl ? handEl.getBoundingClientRect() : null;
+  const result  = Engine.applyMove(state, 0, tile, validEnds[0]);
   Input.clearSelection();
+  if (result.ok && state.board.length > 0) {
+    Render.startSnapAnim(state.board[state.board.length - 1], srcRect, state);
+  }
   _handleMoveResult(result);
 };
 
@@ -354,7 +359,12 @@ const GameUI = {
     _pendingTile = null;
     _hideEndPicker();
     Input.clearSelection();
-    const result = Engine.applyMove(state, 0, tile, end);
+    const handEl  = document.querySelector(`[data-tile-id="${tile.id}"]`);
+    const srcRect = handEl ? handEl.getBoundingClientRect() : null;
+    const result  = Engine.applyMove(state, 0, tile, end);
+    if (result.ok && state.board.length > 0) {
+      Render.startSnapAnim(state.board[state.board.length - 1], srcRect, state);
+    }
     _handleMoveResult(result);
   },
 

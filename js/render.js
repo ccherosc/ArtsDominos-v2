@@ -34,6 +34,9 @@ const Render = (() => {
   let _pulseStateRef = null;
   let _pulseRAF     = null;
 
+  // Tile snap animation
+  let _snapAnim = null; // descriptor; null when idle
+
   function setPulse(active, stateRef) {
     _pulseActive   = active;
     _pulseStateRef = active ? stateRef : null;
@@ -107,6 +110,7 @@ const Render = (() => {
 
   function drawBoard(state) {
     if (!ctx) return;
+    if (_snapAnim) return; // _snapTick drives all draws while animation is live
     ctx.clearRect(0, 0, W, H);
     ctx.save();
     ctx.translate(panX, panY);
@@ -116,7 +120,7 @@ const Render = (() => {
       _drawEmptyHint();
     } else {
       const pulse = _pulseActive && state.players[state.currentPlayer]?.isHuman;
-      _drawChain(state.board, state.leftEnd, state.rightEnd, pulse);
+      _drawChain(state.board, state.leftEnd, state.rightEnd, pulse, null);
     }
 
     ctx.restore();
@@ -125,7 +129,7 @@ const Render = (() => {
 
   // ── Chain layout ───────────────────────────────────
 
-  function _drawChain(boardTiles, leftEndVal, rightEndVal, pulse) {
+  function _drawChain(boardTiles, leftEndVal, rightEndVal, pulse, excludeId) {
     // Spatial order: left-played (reversed) + center double + right-played
     const center     = boardTiles.find(t => t.end === 'center');
     const leftTiles  = boardTiles.filter(t => t.end === 'left').reverse();
@@ -142,26 +146,19 @@ const Render = (() => {
 
     ordered.forEach(bt => {
       const { tile, end, connectPip, newEndPip } = bt;
+      const isVert = tile.isDouble || end === 'center';
+      const tileW  = isVert ? TILE_SHORT : TILE_LONG;
 
-      if (tile.isDouble || end === 'center') {
-        // Double / opening tile: portrait (perpendicular to chain)
-        _drawBoardTileV(x, -TILE_LONG / 2, tile.a);
-        x += TILE_SHORT + GAP;
-      } else {
-        // Non-double: landscape, orient so connecting pip faces inward
-        let leftPip, rightPip;
-        if (end === 'left') {
-          // Tile is to the LEFT of the chain: exposed pip on left, connecting on right
-          leftPip  = newEndPip;
-          rightPip = connectPip;
+      if (!excludeId || tile.id !== excludeId) {
+        if (isVert) {
+          _drawBoardTileV(x, -TILE_LONG / 2, tile.a);
         } else {
-          // Tile is to the RIGHT: connecting pip on left, exposed on right
-          leftPip  = connectPip;
-          rightPip = newEndPip;
+          const leftPip  = end === 'left' ? newEndPip  : connectPip;
+          const rightPip = end === 'left' ? connectPip : newEndPip;
+          _drawBoardTileH(x, -TILE_SHORT / 2, leftPip, rightPip);
         }
-        _drawBoardTileH(x, -TILE_SHORT / 2, leftPip, rightPip);
-        x += TILE_LONG + GAP;
       }
+      x += tileW + GAP;
     });
 
     // End value badges — show current left/right pip the player must match
@@ -305,6 +302,105 @@ const Render = (() => {
     ctx.textBaseline = 'middle';
     ctx.fillText('Tap your opening double to begin', 0, 0);
     ctx.restore();
+  }
+
+  // ── Tile snap animation ────────────────────────────
+
+  function _computeTileChainPos(targetBT, board) {
+    const center     = board.find(t => t.end === 'center');
+    const leftTiles  = board.filter(t => t.end === 'left').reverse();
+    const rightTiles = board.filter(t => t.end === 'right');
+    const ordered    = [...leftTiles, center, ...rightTiles].filter(Boolean);
+
+    const totalW = ordered.reduce((sum, bt, i) => {
+      const tw = (bt.tile.isDouble || bt.end === 'center') ? TILE_SHORT : TILE_LONG;
+      return sum + tw + (i < ordered.length - 1 ? GAP : 0);
+    }, 0);
+
+    let x = -totalW / 2;
+    for (const bt of ordered) {
+      const isVert = bt.tile.isDouble || bt.end === 'center';
+      const tileW  = isVert ? TILE_SHORT : TILE_LONG;
+      const tileH  = isVert ? TILE_LONG  : TILE_SHORT;
+      if (bt.tile.id === targetBT.tile.id) return { x, y: -tileH / 2, w: tileW, h: tileH };
+      x += tileW + GAP;
+    }
+    return null;
+  }
+
+  function startSnapAnim(newBoardTile, srcRect, state) {
+    if (!canvas || !srcRect) return;
+    const dst = _computeTileChainPos(newBoardTile, state.board);
+    if (!dst) return;
+
+    const canvasRect = canvas.getBoundingClientRect();
+    // Convert DOM hand-tile center → chain-space coords
+    const srcLogX = (srcRect.left + srcRect.width  / 2) - canvasRect.left;
+    const srcLogY = (srcRect.top  + srcRect.height / 2) - canvasRect.top;
+    const srcChainX = (srcLogX - panX) / zoom - dst.w / 2;
+    const srcChainY = (srcLogY - panY) / zoom - dst.h / 2;
+
+    _snapAnim = {
+      state,
+      excludeId:  newBoardTile.tile.id,
+      srcX: srcChainX,  srcY: srcChainY,
+      dstX: dst.x,      dstY: dst.y,
+      w: dst.w,         h: dst.h,
+      isVert:      dst.w === TILE_SHORT,
+      end:         newBoardTile.end,
+      connectPip:  newBoardTile.connectPip,
+      newEndPip:   newBoardTile.newEndPip,
+      tile:        newBoardTile.tile,
+      startTime:   performance.now(),
+      duration:    220,
+    };
+    requestAnimationFrame(_snapTick);
+  }
+
+  function _snapTick(ts) {
+    if (!_snapAnim) return;
+    const { startTime, duration, state,
+            srcX, srcY, dstX, dstY, w, h,
+            isVert, end, connectPip, newEndPip, tile, excludeId } = _snapAnim;
+
+    const t    = Math.min(1, (ts - startTime) / duration);
+    const ease = 1 - Math.pow(1 - t, 3); // cubic-out
+    const ix   = srcX + (dstX - srcX) * ease;
+    const iy   = srcY + (dstY - srcY) * ease;
+    const sc   = 1 + (1 - ease) * 0.22; // 1.22→1.0 scale pop
+
+    // Full board redraw with the landing tile excluded
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.translate(panX, panY);
+    ctx.scale(zoom, zoom);
+
+    const pulse = _pulseActive && state.players[state.currentPlayer]?.isHuman;
+    _drawChain(state.board, state.leftEnd, state.rightEnd, pulse, excludeId);
+
+    // Draw the flying tile at its interpolated chain-space position
+    ctx.save();
+    ctx.globalAlpha = 0.72 + ease * 0.28;
+    ctx.translate(ix + w / 2, iy + h / 2);
+    ctx.scale(sc, sc);
+    ctx.translate(-w / 2, -h / 2);
+    if (isVert) {
+      _drawBoardTileV(0, 0, tile.a);
+    } else {
+      const lp = end === 'left' ? newEndPip : connectPip;
+      const rp = end === 'left' ? connectPip : newEndPip;
+      _drawBoardTileH(0, 0, lp, rp);
+    }
+    ctx.restore();
+
+    ctx.restore();
+
+    if (t >= 1) {
+      _snapAnim = null;
+      drawBoard(state); // final clean draw
+    } else {
+      requestAnimationFrame(_snapTick);
+    }
   }
 
   // ── Player hand tiles (DOM canvas elements) ────────
@@ -488,6 +584,7 @@ const Render = (() => {
     fitChain,
     rebuildHand,
     setPulse,
+    startSnapAnim,
   };
 
 })();
