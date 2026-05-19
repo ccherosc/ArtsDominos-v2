@@ -328,6 +328,10 @@ const Render = (() => {
     return null;
   }
 
+  function cancelSnap() {
+    _snapAnim = null;
+  }
+
   function startSnapAnim(newBoardTile, srcRect, state) {
     if (!canvas || !srcRect) return;
     const dst = _computeTileChainPos(newBoardTile, state.board);
@@ -585,6 +589,7 @@ const Render = (() => {
     rebuildHand,
     setPulse,
     startSnapAnim,
+    cancelSnap,
   };
 
 })();

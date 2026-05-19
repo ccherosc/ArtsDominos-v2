@@ -12,7 +12,7 @@ const AI = (() => {
 
   // ── Strategy dispatcher ────────────────────────────
 
-  function choosMove(state, playerIndex) {
+  function chooseMove(state, playerIndex) {
     const char = state.players[playerIndex];
     switch (char.aiStrategy) {
       case 'greedy':    return _greedy(state, playerIndex);
@@ -119,7 +119,7 @@ const AI = (() => {
     if (moves.length === 1) return moves[0];
 
     const myHand   = state.hands[playerIndex];
-    const allTiles = Engine.buildFullSet();
+    const allTiles = _FULL_SET;
 
     // Tiles not in my hand and not on board → in opponents' hands or boneyard
     const boardIds = new Set(state.board.map(p => p.tile.id));
@@ -196,7 +196,7 @@ const AI = (() => {
       if (!Engine.hasAnyValidMove(state, playerIndex)) {
         onDone(Engine.applyPass(state, playerIndex));
       } else {
-        const move = choosMove(state, playerIndex);
+        const move = chooseMove(state, playerIndex);
         if (move) {
           onDone(Engine.applyMove(state, playerIndex, move.tile, move.end));
         } else {
@@ -206,6 +206,9 @@ const AI = (() => {
     }, delay + Math.random() * 300);
   }
 
-  return { choosMove, takeTurn };
+  // Cache the full tile set — built once, reused by expert AI each turn
+  const _FULL_SET = Engine.buildFullSet();
+
+  return { chooseMove, takeTurn };
 
 })();

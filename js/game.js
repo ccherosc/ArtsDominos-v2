@@ -239,7 +239,7 @@ InputEvents.onBoardTap = function(tileId) {
     return;
   }
 
-  const handEl  = document.querySelector(`[data-tile-id="${tile.id}"]`);
+  const handEl  = document.getElementById('hand-tiles')?.querySelector(`[data-tile-id="${tile.id}"]`);
   const srcRect = handEl ? handEl.getBoundingClientRect() : null;
   const result  = Engine.applyMove(state, 0, tile, validEnds[0]);
   Input.clearSelection();
@@ -359,7 +359,7 @@ const GameUI = {
     _pendingTile = null;
     _hideEndPicker();
     Input.clearSelection();
-    const handEl  = document.querySelector(`[data-tile-id="${tile.id}"]`);
+    const handEl  = document.getElementById('hand-tiles')?.querySelector(`[data-tile-id="${tile.id}"]`);
     const srcRect = handEl ? handEl.getBoundingClientRect() : null;
     const result  = Engine.applyMove(state, 0, tile, end);
     if (result.ok && state.board.length > 0) {
@@ -378,6 +378,7 @@ const GameUI = {
 
   nextRound() {
     document.getElementById('result-overlay').classList.add('hidden');
+    Render.cancelSnap();
     _hideEndPicker();
     Engine.startNewRound(state);
     _refreshUI();
@@ -396,6 +397,7 @@ const GameUI = {
 
   restartRound() {
     document.getElementById('pause-overlay').classList.add('hidden');
+    Render.cancelSnap();
     _hideEndPicker();
     Engine.startNewRound(state);
     _refreshUI();
@@ -414,6 +416,7 @@ const GameUI = {
 
   rematch() {
     document.getElementById('match-over-overlay').classList.add('hidden');
+    Render.cancelSnap();
     _hideEndPicker();
     state = Engine.createGameState(players, Params.format || 'rounds');
     window._gameState = state;
