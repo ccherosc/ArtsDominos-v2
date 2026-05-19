@@ -133,4 +133,20 @@ const QUOTES = {
     closeGame: ["Board's dead. My house."],
   },
 
+  kat: {
+    double:    ["Oh fun, a double!", "Ha! Look at that.", "Lucky me!"],
+    roundWin:  ["Oh wait, I won?", "That was fun!", "Yay!"],
+    pass:      ["No moves, that's okay.", "Pass! No big deal.", "I got nothing."],
+    lowTiles:  ["Oh I'm almost out!", "Two left, haha!"],
+    closeGame: ["Blocked? That counts, right?"],
+  },
+
+  stritch: {
+    double:    ["Double. Let's go.", "That's the one.", "Game on."],
+    roundWin:  ["Good game.", "That's how you do it.", "Hard work pays."],
+    pass:      ["Can't force it.", "I'll come back.", "Skipping."],
+    lowTiles:  ["Two tiles. Closing time.", "Almost done."],
+    closeGame: ["Lowest count. That's me."],
+  },
+
 };
