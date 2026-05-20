@@ -90,17 +90,21 @@ const Sound = (() => {
     }
   }
 
-  // Knock-knock — two raps on the table when a player passes
+  // Knock-knock — two hard raps on wood when a player passes.
+  // Deliberately unlike the tile clack: lower frequencies, hollow resonance,
+  // no high-frequency snap (clack lives at 900 Hz; this knock avoids that band).
   function pass() {
     if (!_on) return;
     try {
       const ctx = _ac();
       const t   = ctx.currentTime;
-      // Each knock: sharp click transient + hollow wood body resonance
-      _noise(ctx, 0.05, 0.55, 0.05, 1100, 0.9, t);
-      _noise(ctx, 0.16, 0.48, 0.14,  250, 3.0, t);
-      _noise(ctx, 0.05, 0.46, 0.05, 1100, 0.9, t + 0.21);
-      _noise(ctx, 0.16, 0.40, 0.14,  250, 3.0, t + 0.21);
+      function hardKnock(when) {
+        _noise(ctx, 0.03, 1.0,  0.03,  420, 0.6, when);  // wideband impact crack
+        _noise(ctx, 0.22, 0.75, 0.09,  105, 11,  when);  // deep hollow wood body
+        _noise(ctx, 0.12, 0.50, 0.10,   68, 4.5, when);  // low sub-thud (mass)
+      }
+      hardKnock(t);
+      hardKnock(t + 0.28);
     } catch (_) {}
   }
 
@@ -153,5 +157,82 @@ const Sound = (() => {
   }
 
   return { clack, shuffle, pass, win, lose, roundWin, setEnabled, isEnabled, init };
+
+})();
+
+/* =====================================================
+   Music — background music player
+   Loads .ogg tracks, shuffles order, plays sequentially.
+   Add a filename to TRACKS to rotate it in automatically.
+   ===================================================== */
+
+const Music = (() => {
+
+  const TRACKS = [
+    'assets/audio/song1.ogg',
+    'assets/audio/song2.ogg',
+    'assets/audio/song3.ogg',
+  ];
+
+  let _on    = false;
+  let _audio = null;
+  let _queue = [];
+  let _idx   = 0;
+
+  function _shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function _advance() {
+    _idx++;
+    if (_idx >= _queue.length) {
+      _queue = _shuffle(TRACKS);
+      _idx   = 0;
+    }
+    _audio.src = _queue[_idx];
+    _audio.play().catch(() => {});
+  }
+
+  function start() {
+    if (!_on) return;
+    if (!_audio) {
+      _audio = new Audio();
+      _audio.volume = 0.35;
+      _audio.addEventListener('ended', _advance);
+    }
+    if (!_audio.paused) return;
+    _queue    = _shuffle(TRACKS);
+    _idx      = 0;
+    _audio.src = _queue[0];
+    _audio.play().catch(() => {});
+  }
+
+  function stop() {
+    if (_audio && !_audio.paused) {
+      _audio.pause();
+      _audio.currentTime = 0;
+    }
+  }
+
+  function setEnabled(on) {
+    _on = on;
+    if (on) start();
+    else    stop();
+  }
+
+  function isEnabled() { return _on; }
+
+  function init() {
+    if (typeof Storage !== 'undefined' && Storage.getSettings) {
+      _on = Storage.getSettings().music === true;
+    }
+  }
+
+  return { start, stop, setEnabled, isEnabled, init };
 
 })();

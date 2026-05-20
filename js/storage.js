@@ -4,7 +4,7 @@ const Storage = (() => {
   const KEY_SETTINGS = 'artsdominos_settings';
   const KEY_RECORDS  = 'artsdominos_records';
 
-  const DEFAULTS_SETTINGS = { sfx: true, music: true, aiSpeed: 'normal', hints: true };
+  const DEFAULTS_SETTINGS = { sfx: true, music: false, aiSpeed: 'normal', hints: true };
 
   function _load(key, fallback) {
     try {

@@ -9,6 +9,7 @@
 const SPLASH_IMAGES = [
   'assets/bg/splash.png',
   'assets/bg/splash2.png',
+  'assets/bg/splash3.png',
 ];
 
 const App = {
@@ -40,7 +41,8 @@ const App = {
   startModeSelect(mode) {
     this.mode = mode;
     this.selectedOpponent = null;
-    this.selectedPartner = null;
+    this.selectedPartner  = null;
+    Music.start(); // first user gesture — safe to start audio here
 
     const title = document.getElementById('select-title');
     if (title) title.textContent = mode === 'teams' ? 'Choose Your Opponents' : 'Choose Your Opponent';
@@ -249,6 +251,8 @@ const App = {
       btn.textContent = next ? 'ON' : 'OFF';
       btn.classList.toggle('on', next);
     }
+    if (key === 'sfx')   Sound.setEnabled(next);
+    if (key === 'music') Music.setEnabled(next);
   },
 
   saveSetting(key, value) {
@@ -330,6 +334,9 @@ const App = {
 
   // ── Init ───────────────────────────────────────────
   init() {
+    Sound.init();
+    Music.init();
+
     // Format buttons
     document.querySelectorAll('.format-btn').forEach(btn => {
       btn.addEventListener('click', () => {

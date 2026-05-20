@@ -195,6 +195,8 @@ function _initSeats() {
 
 function initGame() {
   Sound.init();
+  Music.init();
+  Music.start();
   state = Engine.createGameState(players, Params.format || 'rounds');
   _recapInit();
   window._gameState = state;
