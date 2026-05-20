@@ -251,8 +251,12 @@ const App = {
       btn.textContent = next ? 'ON' : 'OFF';
       btn.classList.toggle('on', next);
     }
-    if (key === 'sfx')   Sound.setEnabled(next);
-    if (key === 'music') Music.setEnabled(next);
+    if (key === 'sfx') Sound.setEnabled(next);
+    if (key === 'music') {
+      Music.setEnabled(next);
+      const splashBtn = document.getElementById('music-splash-btn');
+      if (splashBtn) splashBtn.classList.toggle('off', !next);
+    }
   },
 
   saveSetting(key, value) {
@@ -359,6 +363,10 @@ const App = {
     // AI speed select
     const aiSelect = document.getElementById('ai-speed');
     if (aiSelect) aiSelect.value = settings.aiSpeed || 'normal';
+
+    // Sync splash music button
+    const splashMusicBtn = document.getElementById('music-splash-btn');
+    if (splashMusicBtn) splashMusicBtn.classList.toggle('off', settings.music === false || settings.music === undefined);
 
     // Close profile modal on backdrop click
     const profileModal = document.getElementById('profile-modal');

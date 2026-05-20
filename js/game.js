@@ -435,6 +435,17 @@ function _refreshPassButton() {
   btn.classList.toggle('must-pass', canPass);
 }
 
+// ── Streak tier helper ───────────────────────────────
+
+function _getStreakTier(streak) {
+  if (streak >= 100) return { tier: 5, label: 'Legendary',   sub: `${streak} wins in a row`, flames: '🔥🔥🔥🔥🔥' };
+  if (streak >= 25)  return { tier: 4, label: 'Unstoppable', sub: `${streak} wins in a row`, flames: '🔥🔥🔥🔥' };
+  if (streak >= 10)  return { tier: 3, label: 'Inferno',     sub: `${streak} wins in a row`, flames: '🔥🔥🔥' };
+  if (streak >= 5)   return { tier: 2, label: 'On Fire',     sub: `${streak} wins in a row`, flames: '🔥🔥' };
+  if (streak >= 3)   return { tier: 1, label: 'Hot Streak',  sub: `${streak} wins in a row`, flames: '🔥' };
+  return null;
+}
+
 // ── Round / match results ────────────────────────────
 
 function _showResult(result) {
@@ -470,6 +481,23 @@ function _showResult(result) {
     document.getElementById('match-result-breakdown').textContent = Scoring.pipBreakdownText(state, result);
     document.getElementById('match-result-scores').textContent   =
       `You: ${state.matchScores[0]} pts · ${state.players[1]?.name}: ${state.matchScores[1] || 0} pts${recStr}`;
+
+    // Fire streak banner
+    const fireBanner = document.getElementById('streak-fire-banner');
+    if (fireBanner) {
+      const tierInfo = won ? _getStreakTier(streak) : null;
+      if (tierInfo) {
+        fireBanner.className = `streak-fire-banner tier-${tierInfo.tier}`;
+        fireBanner.innerHTML =
+          `<span class="streak-fire-flames">${tierInfo.flames}</span>` +
+          `<span class="streak-fire-label">${tierInfo.label}</span>` +
+          `<span class="streak-fire-sub">${tierInfo.sub}</span>`;
+      } else {
+        fireBanner.className = 'streak-fire-banner hidden';
+        fireBanner.innerHTML = '';
+      }
+    }
+
     document.getElementById('match-over-overlay').classList.remove('hidden');
 
   } else {
