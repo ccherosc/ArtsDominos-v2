@@ -413,6 +413,12 @@
 }
 
 /* ===== PLAYER HAND ===== */
+@keyframes hand-glow-pulse {
+  0%   { box-shadow: 0 -6px 28px rgba(0,0,0,0.6), 0 -2px 0 0 rgba(201,168,76,0);    border-top-color: rgba(201,168,76,0.35); }
+  50%  { box-shadow: 0 -6px 28px rgba(0,0,0,0.6), 0 -4px 22px 2px rgba(201,168,76,0.55); border-top-color: rgba(201,168,76,0.9); }
+  100% { box-shadow: 0 -6px 28px rgba(0,0,0,0.6), 0 -2px 0 0 rgba(201,168,76,0);    border-top-color: rgba(201,168,76,0.35); }
+}
+
 .hand-area {
   flex-shrink: 0;
   background: linear-gradient(0deg, #0a0402 0%, rgba(20,10,5,0.97) 100%);
@@ -423,6 +429,11 @@
   min-height: 135px;
   max-height: 170px;
   z-index: 20;
+  transition: border-top-color 0.3s, box-shadow 0.3s;
+}
+
+.hand-area.your-turn {
+  animation: hand-glow-pulse 1.8s ease-in-out infinite;
 }
 
 .hand-scroll-wrap {

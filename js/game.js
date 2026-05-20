@@ -408,6 +408,7 @@ function _refreshUI() {
   const isYourTurn = state.players[state.currentPlayer].isHuman;
   document.getElementById('turn-name').textContent = isYourTurn ? 'Your Turn' : `${state.players[state.currentPlayer].name}'s Turn`;
   document.getElementById('turn-arrow').classList.toggle('flip', !isYourTurn);
+  document.getElementById('hand-area').classList.toggle('your-turn', isYourTurn);
 
   // V2: update opponent tile backs
   Render.renderOpponentBacks(state);
