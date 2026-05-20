@@ -14,7 +14,7 @@
 
 const Leaderboard = (() => {
 
-  const DB_URL = 'YOUR_FIREBASE_DB_URL';   // ← paste here
+  const DB_URL = 'https://artsdominos-default-rtdb.firebaseio.com';
 
   const _ready = typeof DB_URL === 'string' && DB_URL.startsWith('https://');
 
