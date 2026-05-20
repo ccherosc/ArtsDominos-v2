@@ -41,7 +41,7 @@ const Engine = (() => {
     format:  'rounds' | 'points' | 'bestof3'
   */
   function createGameState(players, format) {
-    const tilesPerPlayer = players.length <= 2 ? 10 : 7;
+    const tilesPerPlayer = 10;
     const allTiles = shuffle(buildFullSet());
 
     const hands = players.map((_, i) =>
@@ -287,7 +287,7 @@ const Engine = (() => {
   // ── New round (same match) ─────────────────────────
 
   function startNewRound(state) {
-    const tilesPerPlayer = state.players.length <= 2 ? 10 : 7;
+    const tilesPerPlayer = 10;
     const allTiles = shuffle(buildFullSet());
 
     state.hands = state.players.map((_, i) =>

@@ -242,6 +242,19 @@ function _scheduleAITurn() {
 
   AI.takeTurn(state, state.currentPlayer, (result) => {
     document.getElementById('board-hint').classList.add('hidden-hint');
+
+    // Animate the AI tile flying from its backs zone onto the board
+    if (result.ok && !result.passed && !result.blocked && state.board.length > 0) {
+      const pi = state.lastMove?.playerIndex ?? state.currentPlayer;
+      const total = state.players.length;
+      const containerId = total === 2 ? 'backs-north'
+        : ({ 1: 'backs-east', 2: 'backs-north', 3: 'backs-west' }[pi] || null);
+      const container = containerId ? document.getElementById(containerId) : null;
+      const backEl    = container?.lastElementChild;
+      const backRect  = backEl ? backEl.getBoundingClientRect() : null;
+      Render.startSnapAnim(state.board[state.board.length - 1], backRect, state);
+    }
+
     _handleMoveResult(result, false);
   });
 }
