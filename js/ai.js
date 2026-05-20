@@ -189,8 +189,16 @@ const AI = (() => {
 
   function takeTurn(state, playerIndex, onDone) {
     const settings = typeof Storage !== 'undefined' ? Storage.getSettings() : {};
-    const delays = { fast: 400, normal: 900, slow: 1800 };
-    const delay  = delays[settings.aiSpeed] || 900;
+    const speed    = settings.aiSpeed || 'normal';
+
+    let delay;
+    if (speed === 'fast') {
+      delay = 0;
+    } else if (speed === 'normal') {
+      delay = 2000 + Math.random() * 3000;  // 2–5 s, deliberate but quick
+    } else {
+      delay = 3000 + Math.random() * 7000;  // 3–10 s, dramatic
+    }
 
     setTimeout(() => {
       if (!Engine.hasAnyValidMove(state, playerIndex)) {
@@ -203,7 +211,7 @@ const AI = (() => {
           onDone(Engine.applyPass(state, playerIndex));
         }
       }
-    }, delay + Math.random() * 300);
+    }, delay);
   }
 
   // Cache the full tile set — built once, reused by expert AI each turn
