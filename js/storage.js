@@ -3,6 +3,8 @@
 const Storage = (() => {
   const KEY_SETTINGS = 'artsdominos_settings';
   const KEY_RECORDS  = 'artsdominos_records';
+  const KEY_PLAYER   = 'artsdominos_player';
+  const KEY_GLOBAL   = 'artsdominos_global';
 
   const DEFAULTS_SETTINGS = { sfx: true, music: false, aiSpeed: 'normal', hints: true };
 
@@ -60,6 +62,47 @@ const Storage = (() => {
 
     resetProgress() {
       localStorage.removeItem(KEY_RECORDS);
+      localStorage.removeItem(KEY_GLOBAL);
+    },
+
+    // ── Player identity ──────────────────────────────
+    getPlayerName() {
+      return _load(KEY_PLAYER, {}).name || null;
+    },
+
+    setPlayerName(name) {
+      const p = _load(KEY_PLAYER, {});
+      p.name = String(name).trim().slice(0, 20);
+      _save(KEY_PLAYER, p);
+    },
+
+    getPlayerId() {
+      const p = _load(KEY_PLAYER, {});
+      if (!p.id) {
+        p.id = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
+        _save(KEY_PLAYER, p);
+      }
+      return p.id;
+    },
+
+    // ── Global cumulative stats (across all opponents) ─
+    getGlobalStats() {
+      return { totalPoints: 0, wins: 0, losses: 0, bestStreak: 0, currentStreak: 0,
+               ..._load(KEY_GLOBAL, {}) };
+    },
+
+    addMatchResult(points, won) {
+      const g = this.getGlobalStats();
+      g.totalPoints    = (g.totalPoints || 0) + Math.max(0, points || 0);
+      if (won) {
+        g.wins          = (g.wins || 0) + 1;
+        g.currentStreak = (g.currentStreak || 0) + 1;
+        if (g.currentStreak > (g.bestStreak || 0)) g.bestStreak = g.currentStreak;
+      } else {
+        g.losses        = (g.losses || 0) + 1;
+        g.currentStreak = 0;
+      }
+      _save(KEY_GLOBAL, g);
     },
   };
 })();

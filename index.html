@@ -41,7 +41,10 @@
         <div class="menu-secondary-row">
           <button class="btn-secondary" onclick="App.showScreen('screen-howtoplay')">How to Play</button>
           <button class="btn-secondary" onclick="App.showStats()">Stats</button>
+        </div>
+        <div class="menu-secondary-row">
           <button class="btn-secondary" onclick="App.showScreen('screen-settings')">Settings</button>
+          <button class="btn-secondary menu-lb-btn" onclick="App.showLeaderboard()">&#127942; Leaderboard</button>
         </div>
       </nav>
     </div>
@@ -147,6 +150,10 @@
           <label class="setting-label">Show Pip Hints</label>
           <button class="toggle-btn on" id="toggle-hints" onclick="App.toggleSetting('hints')">ON</button>
         </div>
+        <div class="setting-row">
+          <label class="setting-label">Player Name</label>
+          <button class="btn-secondary" style="font-size:0.78rem;padding:8px 14px;" onclick="App.changeName()" id="settings-name-btn">Change</button>
+        </div>
         <div class="gold-rule"></div>
         <div class="setting-row">
           <label class="setting-label">Reset All Progress</label>
@@ -249,7 +256,33 @@
     </div>
   </div>
 
+  <!-- ===== Name Entry Modal ===== -->
+  <div id="name-modal" class="name-modal hidden">
+    <div class="name-modal-card">
+      <div class="name-modal-logo">ArtsDominos</div>
+      <div class="name-modal-sub">Cuban Double-Nine</div>
+      <div class="gold-rule" style="width:60%;margin:12px auto;"></div>
+      <p class="name-modal-prompt">Enter your name to join the leaderboard</p>
+      <input type="text" id="player-name-input" class="name-input"
+             placeholder="Your name" maxlength="20" autocomplete="off"
+             onkeydown="if(event.key==='Enter')App.saveName()">
+      <button class="btn-primary" onclick="App.saveName()">Let's Play!</button>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: Leaderboard ===== -->
+  <div id="screen-leaderboard" class="screen">
+    <div class="content-container">
+      <div class="screen-header">
+        <button class="btn-back" onclick="App.showScreen('screen-menu')">&#8592; Back</button>
+        <h2>&#127942; Leaderboard</h2>
+      </div>
+      <div id="leaderboard-content" class="leaderboard-content"></div>
+    </div>
+  </div>
+
   <script src="js/storage.js"></script>
+  <script src="js/leaderboard.js"></script>
   <script src="js/characters.js"></script>
   <script src="js/sound.js"></script>
   <script src="js/main.js"></script>

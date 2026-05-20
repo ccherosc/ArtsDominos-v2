@@ -336,6 +336,96 @@ const App = {
     this.showScreen('screen-stats');
   },
 
+  // ── Player name ────────────────────────────────────
+  saveName() {
+    const input = document.getElementById('player-name-input');
+    const name  = input ? input.value.trim() : '';
+    if (!name) {
+      if (input) input.focus();
+      return;
+    }
+    Storage.setPlayerName(name);
+    document.getElementById('name-modal').classList.add('hidden');
+    this._updateSettingsNameBtn();
+    this.showScreen('screen-menu');
+  },
+
+  changeName() {
+    const modal = document.getElementById('name-modal');
+    if (!modal) return;
+    const input = document.getElementById('player-name-input');
+    if (input) input.value = Storage.getPlayerName() || '';
+    modal.classList.remove('hidden');
+    setTimeout(() => { if (input) input.focus(); }, 80);
+  },
+
+  _updateSettingsNameBtn() {
+    const btn = document.getElementById('settings-name-btn');
+    const name = Storage.getPlayerName();
+    if (btn && name) btn.textContent = name;
+  },
+
+  // ── Leaderboard ────────────────────────────────────
+  async showLeaderboard() {
+    this.showScreen('screen-leaderboard');
+    const el = document.getElementById('leaderboard-content');
+    if (!el) return;
+
+    if (!Leaderboard.isReady()) {
+      el.innerHTML = '<p class="leaderboard-offline">Leaderboard coming soon — not yet configured.</p>';
+      return;
+    }
+
+    el.innerHTML = '<p class="leaderboard-loading">Loading…</p>';
+
+    const myName  = Storage.getPlayerName();
+    const myStats = Storage.getGlobalStats();
+    const entries = await Leaderboard.fetchTop(25);
+
+    let html = '';
+
+    // Personal summary card
+    if (myName) {
+      html += `
+        <div class="lb-my-card">
+          <div class="lb-my-stat"><div class="lb-my-val">${(myStats.totalPoints || 0).toLocaleString()}</div><div class="lb-my-lbl">Your Points</div></div>
+          <div class="lb-my-stat"><div class="lb-my-val">${myStats.wins || 0}</div><div class="lb-my-lbl">Wins</div></div>
+          <div class="lb-my-stat"><div class="lb-my-val">${myStats.bestStreak || 0}</div><div class="lb-my-lbl">Best Streak</div></div>
+        </div>`;
+    }
+
+    if (entries.length === 0) {
+      html += '<p class="leaderboard-empty">No entries yet — play a match to be first on the board!</p>';
+    } else {
+      const medals = ['🥇', '🥈', '🥉'];
+      const rows = entries.map((e, i) => {
+        const isYou = myName && e.name === myName;
+        const streakTxt = e.bestStreak > 0 ? `🔥${e.bestStreak}` : '—';
+        return `<div class="lb-row${isYou ? ' lb-you' : ''}">
+          <span class="lb-rank">${medals[i] || (i + 1)}</span>
+          <span class="lb-name">${e.name}</span>
+          <span class="lb-pts">${(e.totalPoints || 0).toLocaleString()}</span>
+          <span class="lb-wins">${e.wins || 0}W</span>
+          <span class="lb-streak">${streakTxt}</span>
+        </div>`;
+      }).join('');
+
+      html += `
+        <div class="lb-table">
+          <div class="lb-header">
+            <span class="lb-rank">#</span>
+            <span class="lb-name">Player</span>
+            <span class="lb-pts">Points</span>
+            <span class="lb-wins">W</span>
+            <span class="lb-streak">Streak</span>
+          </div>
+          ${rows}
+        </div>`;
+    }
+
+    el.innerHTML = html;
+  },
+
   // ── Init ───────────────────────────────────────────
   init() {
     Sound.init();
@@ -376,7 +466,15 @@ const App = {
       });
     }
 
-    this.showScreen('screen-menu');
+    this._updateSettingsNameBtn();
+
+    // Show name entry modal on first launch
+    if (!Storage.getPlayerName()) {
+      document.getElementById('name-modal')?.classList.remove('hidden');
+      setTimeout(() => document.getElementById('player-name-input')?.focus(), 120);
+    } else {
+      this.showScreen('screen-menu');
+    }
   },
 };
 

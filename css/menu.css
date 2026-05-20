@@ -965,3 +965,206 @@
   padding: var(--gap-xl) 0;
   font-style: italic;
 }
+
+/* ===== NAME ENTRY MODAL ===== */
+.name-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(8,4,2,0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gap-lg);
+}
+.name-modal.hidden { display: none !important; }
+
+.name-modal-card {
+  width: 100%;
+  max-width: 360px;
+  background: linear-gradient(160deg, #2C1810 0%, #1a0c06 60%, #0f0603 100%);
+  border: 2px solid var(--gold);
+  border-radius: var(--r-lg);
+  padding: var(--gap-xl) var(--gap-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-md);
+  box-shadow: 0 0 60px rgba(201,168,76,0.18), 0 24px 80px rgba(0,0,0,0.9);
+}
+
+.name-modal-logo {
+  font-family: var(--font-heading);
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: var(--gold-light);
+  text-shadow: 0 0 24px rgba(201,168,76,0.5);
+  letter-spacing: 0.04em;
+}
+
+.name-modal-sub {
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  letter-spacing: 0.12em;
+  margin-top: -8px;
+}
+
+.name-modal-prompt {
+  font-size: 0.88rem;
+  color: var(--text-light);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.name-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(201,168,76,0.45);
+  border-radius: var(--r-sm);
+  color: var(--gold-light);
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  text-align: center;
+  letter-spacing: 0.04em;
+  outline: none;
+  transition: border-color var(--t-mid), box-shadow var(--t-mid);
+}
+.name-input::placeholder { color: var(--text-dim); font-style: italic; }
+.name-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(201,168,76,0.25);
+}
+
+/* ===== LEADERBOARD SCREEN ===== */
+.leaderboard-content {
+  width: 100%;
+  padding: 0 var(--gap-lg) var(--gap-xl);
+}
+
+.leaderboard-loading,
+.leaderboard-empty,
+.leaderboard-offline {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: var(--gap-xl) 0;
+  font-style: italic;
+}
+
+.lb-my-card {
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.35);
+  border-radius: var(--r-md);
+  padding: var(--gap-md) var(--gap-lg);
+  margin-bottom: var(--gap-lg);
+  display: flex;
+  justify-content: space-around;
+  gap: var(--gap-sm);
+}
+
+.lb-my-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.lb-my-val {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--gold-light);
+}
+
+.lb-my-lbl {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.lb-table {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lb-header {
+  display: grid;
+  grid-template-columns: 36px 1fr 72px 36px 52px;
+  gap: 4px;
+  padding: 6px var(--gap-sm);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+  margin-bottom: 4px;
+}
+
+.lb-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 72px 36px 52px;
+  gap: 4px;
+  padding: 9px var(--gap-sm);
+  border-radius: var(--r-sm);
+  align-items: center;
+  transition: background var(--t-mid);
+}
+.lb-row:hover { background: rgba(201,168,76,0.05); }
+
+.lb-row.lb-you {
+  background: rgba(201,168,76,0.11);
+  border: 1px solid rgba(201,168,76,0.30);
+}
+
+.lb-rank {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+.lb-row:nth-child(1) .lb-rank { font-size: 1.1rem; }
+.lb-row:nth-child(2) .lb-rank { font-size: 1.0rem; }
+.lb-row:nth-child(3) .lb-rank { font-size: 0.95rem; }
+
+.lb-name {
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  color: var(--text-light);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-row.lb-you .lb-name { color: var(--gold-light); }
+
+.lb-pts {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: var(--gold-light);
+  text-align: right;
+}
+
+.lb-wins {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.lb-streak {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.menu-lb-btn {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

@@ -467,6 +467,17 @@ function _showResult(result) {
     }
     setTimeout(() => won ? Sound.win() : Sound.lose(), 300);
 
+    // Update global cumulative stats and submit to leaderboard
+    const matchPoints = state.matchScores[0] || 0;
+    Storage.addMatchResult(matchPoints, won);
+    if (typeof Leaderboard !== 'undefined') {
+      const playerName = Storage.getPlayerName();
+      const playerId   = Storage.getPlayerId();
+      if (playerName) {
+        Leaderboard.submit(playerId, playerName, Storage.getGlobalStats()).catch(() => {});
+      }
+    }
+
     // Running record vs this opponent (already updated above)
     const rec     = opp ? Storage.getRecord(opp.id) : null;
     const streak  = rec ? (rec.streak || 0) : 0;
