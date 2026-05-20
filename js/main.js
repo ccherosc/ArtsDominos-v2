@@ -5,18 +5,36 @@
    match setup. Runs on index.html only.
    ===================================================== */
 
+// Add new filenames here to rotate them in automatically
+const SPLASH_IMAGES = [
+  'assets/bg/splash.png',
+  'assets/bg/splash2.png',
+];
+
 const App = {
   mode: '1v1',
   selectedFormat: 'rounds',
   selectedOpponent: null,
   selectedPartner: null,
   profileChar: null,
+  _lastSplash: null,
+
+  // ── Splash rotation ────────────────────────────────
+  _rotateSplash() {
+    if (SPLASH_IMAGES.length < 2) return;
+    const pool = SPLASH_IMAGES.filter(s => s !== this._lastSplash);
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    this._lastSplash = pick;
+    const img = document.querySelector('.menu-splash-img');
+    if (img) img.src = pick;
+  },
 
   // ── Screen navigation ──────────────────────────────
   showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const target = document.getElementById(id);
     if (target) target.classList.add('active');
+    if (id === 'screen-menu') this._rotateSplash();
   },
 
   startModeSelect(mode) {
