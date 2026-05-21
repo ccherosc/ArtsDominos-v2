@@ -5,6 +5,35 @@
    match setup. Runs on index.html only.
    ===================================================== */
 
+// ── PWA install prompt ─────────────────────────────
+let _installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.classList.remove('hidden');
+});
+
+// Hide button once installed
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.classList.add('hidden');
+  _installPrompt = null;
+});
+
+// Show button on iOS Safari if not already in standalone mode
+(function _iosInstallCheck() {
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isSafari = /^((?!chrome|crios|fxios).)*safari/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true
+    || window.matchMedia('(display-mode: standalone)').matches;
+  if (isIos && isSafari && !isStandalone) {
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.classList.remove('hidden');
+  }
+})();
+
 // Drop any splash*.png into assets/bg/ — picked up automatically, no code change needed.
 // Probes splash.png, splash2.png … splash12.png; missing files are silently removed.
 let SPLASH_IMAGES = [
@@ -247,6 +276,24 @@ const App = {
       format:   this.selectedFormat,
     });
     window.location.href = `game.html?${params}`;
+  },
+
+  // ── Install / Add to Home Screen ───────────────────
+  installApp() {
+    if (_installPrompt) {
+      _installPrompt.prompt();
+      _installPrompt.userChoice.then(() => { _installPrompt = null; });
+      return;
+    }
+    // iOS Safari: no API — show tooltip
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIos) {
+      document.getElementById('install-ios-tip')?.classList.remove('hidden');
+    }
+  },
+
+  closeInstallTip() {
+    document.getElementById('install-ios-tip')?.classList.add('hidden');
   },
 
   // ── Settings ───────────────────────────────────────

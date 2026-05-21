@@ -74,6 +74,68 @@
   pointer-events: none;
 }
 
+/* Install / Add to Home Screen button — left side mirror of music btn */
+.install-splash-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.55);
+  background: rgba(10,5,2,0.60);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--gold);
+  font-size: 1.35rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--t-mid), border-color var(--t-mid);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.install-splash-btn:hover,
+.install-splash-btn:active {
+  background: rgba(30,15,5,0.82);
+  border-color: var(--gold-light);
+}
+
+/* iOS tooltip that appears below the install button */
+.install-ios-tip {
+  position: absolute;
+  top: 62px;
+  left: 10px;
+  z-index: 20;
+  background: rgba(10,5,2,0.92);
+  border: 1px solid rgba(201,168,76,0.5);
+  border-radius: 10px;
+  color: var(--text-light);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  padding: 10px 36px 10px 12px;
+  max-width: 210px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+}
+.install-ios-tip strong { color: var(--gold); }
+.install-tip-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+}
+
 /* Gradient fades the image into the dark footer below */
 .menu-hero-gradient {
   position: absolute;

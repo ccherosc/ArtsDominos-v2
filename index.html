@@ -33,6 +33,11 @@
       >
       <div class="menu-hero-gradient"></div>
       <button class="music-splash-btn" id="music-splash-btn" onclick="App.toggleSetting('music')" aria-label="Toggle music">&#9835;</button>
+      <button class="install-splash-btn hidden" id="install-btn" onclick="App.installApp()" aria-label="Add to Home Screen">&#8962;</button>
+      <div class="install-ios-tip hidden" id="install-ios-tip">
+        Tap <strong>Share</strong> &#x2191; then <strong>"Add to Home Screen"</strong>
+        <button class="install-tip-close" onclick="App.closeInstallTip()">&#10005;</button>
+      </div>
     </div>
 
     <div class="menu-footer">
