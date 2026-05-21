@@ -231,42 +231,69 @@
   line-height: 1;
 }
 
-/* Individual tile back — upright domino back, standing at far edge */
+/* Individual tile back — Cuban diamond back design */
 .tile-back {
   display: inline-block;
   width: 17px;
   height: 31px;
-  background: linear-gradient(160deg, #1c0e04 0%, #2e1609 55%, #1c0e04 100%);
-  border: 1px solid rgba(201,168,76,0.22);
+  /* Base mahogany + subtle 45° crosshatch lattice */
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(201,168,76,0.055) 0px, rgba(201,168,76,0.055) 0.5px,
+      transparent 0.5px, transparent 4px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(201,168,76,0.055) 0px, rgba(201,168,76,0.055) 0.5px,
+      transparent 0.5px, transparent 4px
+    ),
+    linear-gradient(160deg, #1c0e04 0%, #321808 52%, #1c0e04 100%);
+  border: 1px solid rgba(201,168,76,0.32);
   border-radius: 3px;
   position: relative;
   flex-shrink: 0;
   box-shadow:
-    inset 0 1px 3px rgba(255,255,255,0.06),
-    inset 0 -1px 2px rgba(0,0,0,0.4),
+    inset 0 1px 3px rgba(255,255,255,0.07),
+    inset 0 -1px 2px rgba(0,0,0,0.45),
     0 2px 5px rgba(0,0,0,0.55),
     0 0 0 0.5px rgba(0,0,0,0.6);
 }
 
-/* Subtle inner border to suggest the tile frame */
+/* Inner frame — tighter inset with visible corner accents via box-shadow */
 .tile-back::before {
   content: '';
   position: absolute;
   inset: 2px;
-  border: 0.5px solid rgba(201,168,76,0.14);
-  border-radius: 2px;
+  border: 0.5px solid rgba(201,168,76,0.30);
+  border-radius: 1px;
+  /* Four gold corner dots */
+  box-shadow:
+     1px  1px 0 0.5px rgba(201,168,76,0.45),
+    -1px  1px 0 0.5px rgba(201,168,76,0.45),
+     1px -1px 0 0.5px rgba(201,168,76,0.45),
+    -1px -1px 0 0.5px rgba(201,168,76,0.45);
 }
 
-/* Center pip/diamond hint on the back */
+/* Central embossed diamond — the Cuban design element */
 .tile-back::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
+  width: 9px;
+  height: 9px;
   transform: translate(-50%, -50%) rotate(45deg);
-  width: 5px;
-  height: 5px;
-  border: 0.5px solid rgba(201,168,76,0.18);
+  background: linear-gradient(
+    135deg,
+    rgba(201,168,76,0.24) 0%,
+    rgba(201,168,76,0.07) 55%,
+    rgba(201,168,76,0.16) 100%
+  );
+  border: 0.75px solid rgba(201,168,76,0.68);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 1px 2px rgba(0,0,0,0.35);
 }
 
 .tile-backs-row {
@@ -332,6 +359,10 @@
 .tile-backs-col .tile-back {
   width: 16px;
   height: 28px;
+}
+.tile-backs-col .tile-back::after {
+  width: 8px;
+  height: 8px;
 }
 
 /* ===== V2: BOARD OUTER (table rail + canvas wrapper) ===== */
