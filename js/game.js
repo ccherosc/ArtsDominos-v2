@@ -615,6 +615,37 @@ const GameUI = {
     }
   },
 
+  shareResult() {
+    const summary = Scoring.getMatchSummary(state);
+    const won     = summary.winnerIndex === 0;
+    const opp     = CharacterDB.getById(Params.opponent);
+    const oppName = opp?.name ?? 'my opponent';
+    const myPts   = state.matchScores[0] || 0;
+    const oppPts  = state.matchScores[1] || 0;
+    const baseUrl = window.location.href.replace(/game\.html.*$/, '');
+
+    const text = won
+      ? `I beat ${oppName} ${myPts}–${oppPts}! 🁣 #ArtsDominos`
+      : `${oppName} beat me ${oppPts}–${myPts} in Cuban Double-Nine 🁣 #ArtsDominos`;
+
+    const btn   = document.getElementById('share-result-btn');
+    const flash = msg => {
+      if (!btn) return;
+      const orig = btn.innerHTML;
+      btn.innerHTML  = msg;
+      btn.disabled   = true;
+      setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 1800);
+    };
+
+    if (navigator.share) {
+      navigator.share({ text, url: baseUrl }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text + ' ' + baseUrl)
+        .then(() => flash('✓ Copied!'))
+        .catch(() => flash('Could not copy'));
+    }
+  },
+
   rematch() {
     document.getElementById('match-over-overlay').classList.add('hidden');
     Render.cancelSnap();

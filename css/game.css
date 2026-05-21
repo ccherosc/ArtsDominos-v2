@@ -898,6 +898,35 @@
   font-weight: 700;
 }
 
+/* Share result button */
+.btn-share {
+  width: 100%;
+  max-width: 280px;
+  padding: 10px var(--gap-md);
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.42);
+  border-radius: var(--r-pill);
+  color: var(--gold);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--t-mid), border-color var(--t-mid), color var(--t-mid);
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-share:hover,
+.btn-share:active {
+  background: rgba(201,168,76,0.12);
+  border-color: var(--gold-light);
+  color: var(--gold-light);
+}
+.btn-share:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* ===== GAME RECAP ===== */
 .recap-card {
   background: linear-gradient(160deg, #2C1810 0%, #1A0D07 100%);
