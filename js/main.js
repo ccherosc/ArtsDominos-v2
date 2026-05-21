@@ -5,11 +5,11 @@
    match setup. Runs on index.html only.
    ===================================================== */
 
-// Add new filenames here to rotate them in automatically
-const SPLASH_IMAGES = [
+// Drop any splash*.png into assets/bg/ — picked up automatically, no code change needed.
+// Probes splash.png, splash2.png … splash12.png; missing files are silently removed.
+let SPLASH_IMAGES = [
   'assets/bg/splash.png',
-  'assets/bg/splash2.png',
-  'assets/bg/splash3.png',
+  ...Array.from({ length: 11 }, (_, i) => `assets/bg/splash${i + 2}.png`),
 ];
 
 const App = {
@@ -22,12 +22,20 @@ const App = {
 
   // ── Splash rotation ────────────────────────────────
   _rotateSplash() {
-    if (SPLASH_IMAGES.length < 2) return;
+    if (SPLASH_IMAGES.length === 0) return;
     const pool = SPLASH_IMAGES.filter(s => s !== this._lastSplash);
-    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const pick = (pool.length > 0 ? pool : SPLASH_IMAGES)[Math.floor(Math.random() * (pool.length || SPLASH_IMAGES.length))];
     this._lastSplash = pick;
     const img = document.querySelector('.menu-splash-img');
-    if (img) img.src = pick;
+    if (!img) return;
+    img.src = pick;
+    img.onerror = () => {
+      // Prune missing files so they're never tried again
+      SPLASH_IMAGES = SPLASH_IMAGES.filter(s => s !== pick);
+      this._lastSplash = null;
+      if (SPLASH_IMAGES.length > 0) this._rotateSplash();
+      else img.style.display = 'none';
+    };
   },
 
   // ── Screen navigation ──────────────────────────────
@@ -365,6 +373,62 @@ const App = {
     if (btn && name) btn.textContent = name;
   },
 
+  // ── Playstyle analyst ──────────────────────────────
+  _buildPlaystyleSummary() {
+    const g      = Storage.getGlobalStats();
+    const recs   = Storage.getAllRecords();
+    const wins   = g.wins   || 0;
+    const losses = g.losses || 0;
+    const total  = wins + losses;
+
+    if (total < 3) return 'Play a few more matches to unlock your playstyle profile.';
+
+    const pct    = Math.round(wins / total * 100);
+    const avgPts = Math.round((g.totalPoints || 0) / total);
+    const streak = g.bestStreak || 0;
+
+    // Scan per-opponent records
+    let nemesisId = null, nemesisL = 0, champId = null, champW = 0;
+    Object.entries(recs).forEach(([id, r]) => {
+      if ((r.losses || 0) > nemesisL) { nemesisL = r.losses; nemesisId = id; }
+      if ((r.wins   || 0) > champW)   { champW   = r.wins;   champId   = id; }
+    });
+    const nemesis = nemesisId ? CharacterDB.getById(nemesisId) : null;
+    const champ   = champId   ? CharacterDB.getById(champId)   : null;
+
+    // Opening line — win-rate archetype
+    const opens = pct >= 75
+      ? `A ${pct}% win rate marks you as elite — patient, precise, and rarely rattled.`
+      : pct >= 60
+      ? `Consistent at ${pct}% wins. You read the table well and almost never waste a tile.`
+      : pct >= 45
+      ? `A true competitor at ${pct}% — every match is hard-fought and you know it.`
+      : pct >= 30
+      ? `${pct}% wins and still climbing. The losses are sharpening your instincts.`
+      : `${total} matches played with pure fire. The reads will come.`;
+
+    // Middle — streak or depth
+    const mids = streak >= 10
+      ? ` A ${streak}-game streak proves you can lock in and dominate.`
+      : streak >= 5
+      ? ` A ${streak}-win streak shows the ceiling is high when you find your rhythm.`
+      : total >= 25
+      ? ` ${total} matches of table time gives you an edge most players don't have yet.`
+      : avgPts > 35
+      ? ` Averaging ${avgPts} pts per match — you play for maximum damage, not just survival.`
+      : '';
+
+    // Closer — opponent callout
+    const close = (nemesis && nemesisL >= 2 && nemesisId !== champId)
+      ? ` ${nemesis.name} is still in your head.`
+      : (champ && champW >= 2)
+      ? ` ${champ.name} has felt your best.`
+      : '';
+
+    const summary = opens + mids + close;
+    return summary.length > 250 ? summary.slice(0, 247) + '…' : summary;
+  },
+
   // ── Leaderboard ────────────────────────────────────
   async showLeaderboard() {
     this.showScreen('screen-leaderboard');
@@ -422,6 +486,14 @@ const App = {
           ${rows}
         </div>`;
     }
+
+    // Playstyle analyst card — always shown at bottom, based on local stats
+    const summary = this._buildPlaystyleSummary();
+    html += `
+      <div class="lb-playstyle-card">
+        <div class="lb-playstyle-label">&#9670; Your Playstyle</div>
+        <p class="lb-playstyle-text">${summary}</p>
+      </div>`;
 
     el.innerHTML = html;
   },
