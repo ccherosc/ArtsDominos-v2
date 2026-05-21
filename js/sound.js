@@ -90,21 +90,38 @@ const Sound = (() => {
     }
   }
 
-  // Knock-knock — two hard raps on wood when a player passes.
-  // Deliberately unlike the tile clack: lower frequencies, hollow resonance,
-  // no high-frequency snap (clack lives at 900 Hz; this knock avoids that band).
+  // Knock-knock — two sharp raps on a hardwood table when a player passes.
+  // Louder and more percussive than before: three layers per knock
+  // (sharp attack crack, hollow mid-body, deep sub resonance).
+  // Gap tightened to 0.22 s so it reads unmistakably as "knock knock".
   function pass() {
     if (!_on) return;
     try {
       const ctx = _ac();
       const t   = ctx.currentTime;
-      function hardKnock(when) {
-        _noise(ctx, 0.03, 1.0,  0.03,  420, 0.6, when);  // wideband impact crack
-        _noise(ctx, 0.22, 0.75, 0.09,  105, 11,  when);  // deep hollow wood body
-        _noise(ctx, 0.12, 0.50, 0.10,   68, 4.5, when);  // low sub-thud (mass)
+      function knock(when) {
+        _noise(ctx, 0.025, 1.4,  0.025, 580,  0.5, when);  // sharp knuckle crack
+        _noise(ctx, 0.18,  1.1,  0.07,  130,  9,   when);  // hollow wood chamber
+        _noise(ctx, 0.14,  0.75, 0.10,  62,   3.5, when);  // deep table resonance
       }
-      hardKnock(t);
-      hardKnock(t + 0.28);
+      knock(t);
+      knock(t + 0.22);
+    } catch (_) {}
+  }
+
+  // Heavy slam — played when a double tile hits the board.
+  // Doubles are big moments: deeper, heavier, and longer than a clack.
+  // Three layers: sharp high transient, dense mid thud, long low rumble.
+  function double() {
+    if (!_on) return;
+    try {
+      const ctx = _ac();
+      const t   = ctx.currentTime;
+      _noise(ctx, 0.04,  1.0,  0.05,  1100, 1.5, t);        // sharp high snap
+      _noise(ctx, 0.18,  1.2,  0.10,   280, 0.7, t);        // dense mid thud
+      _noise(ctx, 0.30,  0.85, 0.18,    80, 5.0, t);        // deep low rumble tail
+      // Tiny resonant pitch-drop — a second mass settling
+      _noise(ctx, 0.10,  0.40, 0.12,   160, 3.0, t + 0.04);
     } catch (_) {}
   }
 
@@ -156,7 +173,7 @@ const Sound = (() => {
     }
   }
 
-  return { clack, shuffle, pass, win, lose, roundWin, setEnabled, isEnabled, init };
+  return { clack, shuffle, pass, double, win, lose, roundWin, setEnabled, isEnabled, init };
 
 })();
 

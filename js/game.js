@@ -273,7 +273,13 @@ function _handleMoveResult(result, moverIsHuman = true) {
     }
   }
 
-  result.passed ? Sound.pass() : Sound.clack();
+  if (result.passed) {
+    Sound.pass();
+  } else if (state.lastMove?.tile?.isDouble) {
+    Sound.double();
+  } else {
+    Sound.clack();
+  }
 
   _hideEndPicker();
   _refreshUI();
