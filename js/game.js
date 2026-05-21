@@ -486,8 +486,21 @@ function _showResult(result) {
       ? `  ·  ${streak} wins in a row!`
       : (!won && rec && rec.bestStreak >= 2 && streak === 0 ? `  ·  streak ended at ${rec.bestStreak}` : '');
 
-    document.getElementById('match-result-icon').textContent     = won ? '🏆' : '😔';
-    document.getElementById('match-result-title').textContent    = won ? 'You Win the Match!' : 'You Lost the Match';
+    // Character portrait
+    const portraitWrap  = document.getElementById('match-result-portrait');
+    const portraitImg   = document.getElementById('match-result-portrait-img');
+    const portraitBadge = document.getElementById('match-result-portrait-badge');
+    if (portraitImg && opp) {
+      portraitImg.src     = `assets/characters/${opp.portraitFile}`;
+      portraitImg.alt     = opp.name;
+      portraitImg.onerror = () => { portraitImg.src = 'assets/characters/silhouette.svg'; };
+    }
+    if (portraitWrap)  portraitWrap.className  = `match-result-portrait ${won ? 'won' : 'lost'}`;
+    if (portraitBadge) portraitBadge.textContent = won ? '🏆' : '😔';
+
+    document.getElementById('match-result-title').textContent = won
+      ? 'You Win the Match!'
+      : `${opp?.name ?? 'Opponent'} Wins!`;
     document.getElementById('match-result-detail').textContent   = Scoring.roundResultText(state, result) + streakStr;
     document.getElementById('match-result-breakdown').textContent = Scoring.pipBreakdownText(state, result);
     document.getElementById('match-result-scores').textContent   =

@@ -659,6 +659,79 @@
   text-align: center;
 }
 
+/* ===== MATCH RESULT PORTRAIT ===== */
+@keyframes portrait-pop-won {
+  0%   { transform: scale(0.72); opacity: 0; }
+  65%  { transform: scale(1.07); opacity: 1; }
+  100% { transform: scale(1.00); opacity: 1; }
+}
+@keyframes portrait-pop-lost {
+  0%   { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1.00); opacity: 1; }
+}
+@keyframes portrait-glow-won {
+  0%,100% { box-shadow: 0 0 0 4px var(--gold), 0 0 18px rgba(201,168,76,0.40), 0 0 48px rgba(201,168,76,0.15); }
+  50%      { box-shadow: 0 0 0 4px var(--gold-light), 0 0 32px rgba(201,168,76,0.75), 0 0 72px rgba(201,168,76,0.30); }
+}
+
+.match-result-portrait {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.match-result-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  border-radius: 50%;
+  display: block;
+}
+
+.match-result-portrait-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.match-result-portrait.won {
+  animation: portrait-pop-won 0.42s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.match-result-portrait.won .match-result-portrait-frame {
+  box-shadow: 0 0 0 4px var(--gold), 0 0 28px rgba(201,168,76,0.55), 0 0 60px rgba(201,168,76,0.20);
+  animation: portrait-glow-won 2.4s ease-in-out 0.5s infinite;
+}
+
+.match-result-portrait.lost {
+  animation: portrait-pop-lost 0.35s ease-out both;
+}
+.match-result-portrait.lost .match-result-portrait-img {
+  filter: grayscale(0.45) brightness(0.80);
+}
+.match-result-portrait.lost .match-result-portrait-frame {
+  box-shadow: 0 0 0 3px rgba(160,100,80,0.55), 0 0 16px rgba(180,80,60,0.20);
+}
+
+.match-result-portrait-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1A0D07;
+  border: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
 /* ===== STREAK FIRE BANNER ===== */
 @keyframes fire-pulse-1 {
   0%,100% { box-shadow: 0 0 8px rgba(201,168,76,0.25); }
