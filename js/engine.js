@@ -52,6 +52,10 @@ const Engine = (() => {
 
     const firstPlayer = _findOpeningPlayer(hands, players.length);
 
+    // Normalise points200 → points with a 200-point target
+    const normFormat  = format === 'points200' ? 'points' : format;
+    const normTarget  = format === 'points200' ? 200 : 100;
+
     return {
       players,
       hands,           // hands[playerIndex] = tile[]
@@ -62,15 +66,16 @@ const Engine = (() => {
       currentPlayer: firstPlayer,
       firstMovePending: true,   // first player MUST play the opening double
       openingDouble: _findHighestDouble(hands[firstPlayer]),
+      roundOpener: firstPlayer, // player who opened THIS round (for blocked-game tie-break)
       passCount: 0,             // consecutive passes; equals players.length => blocked
-      roundScores: players.map(() => 0),   // pips scored this round
-      matchScores: players.map(() => 0),   // cumulative match pips (for 'points' format)
-      roundWins:   players.map(() => 0),   // rounds won (for 'bestof3')
+      roundScores: players.map(() => 0),   // pips scored this round (per team slot 0/1)
+      matchScores: players.map(() => 0),   // cumulative match pips  (per team slot 0/1)
+      roundWins:   players.map(() => 0),   // rounds won (per team slot 0/1)
       roundNumber: 1,
-      format,
-      targetPoints: 100,
+      format: normFormat,
+      targetPoints: normTarget,
       status: 'playing',   // 'playing' | 'round_over' | 'match_over'
-      winner: null,        // player index or null
+      winner: null,        // individual player index who ended the round
       lastMove: null,      // { playerIndex, tile, end } for animation
       dirty: true,
     };
@@ -228,15 +233,36 @@ const Engine = (() => {
 
   // ── Round resolution ───────────────────────────────
 
-  function _resolveRoundWin(state, winnerIndex) {
-    const pipsScored = state.hands.reduce((sum, hand, i) => {
-      if (i === winnerIndex) return sum;
+  /*
+    Team layout for 4-player: even indices (0, 2) = Team A, odd (1, 3) = Team B.
+    Score is always stored in the TEAM SLOT: 0 for Team A, 1 for Team B.
+    Slots 2 and 3 of matchScores/roundScores/roundWins stay at 0.
+  */
+
+  function _teamSlot(playerIndex) {
+    // Returns 0 (Team A) or 1 (Team B) regardless of whether it's 2- or 4-player
+    return playerIndex % 2 === 0 ? 0 : 1;
+  }
+
+  function _opposingPips(state, winnerIndex) {
+    const isTeams   = state.players.length === 4;
+    const winnerTeam = _teamSlot(winnerIndex);
+    return state.hands.reduce((sum, hand, i) => {
+      // 4-player: only count the opposing team's hands
+      // 2-player: only count the opponent's hand (same logic — skip same-team players)
+      if (_teamSlot(i) === winnerTeam) return sum;
+      if (!isTeams && i === winnerIndex)  return sum; // safety guard for 2-player
       return sum + hand.reduce((s, t) => s + t.a + t.b, 0);
     }, 0);
+  }
 
-    state.roundScores[winnerIndex] += pipsScored;
-    state.matchScores[winnerIndex] += pipsScored;
-    state.roundWins[winnerIndex]++;
+  function _resolveRoundWin(state, winnerIndex) {
+    const pipsScored  = _opposingPips(state, winnerIndex);
+    const scoreSlot   = _teamSlot(winnerIndex); // 0 = Team A / You, 1 = Team B / Opp
+
+    state.roundScores[scoreSlot] += pipsScored;
+    state.matchScores[scoreSlot] += pipsScored;
+    state.roundWins[scoreSlot]++;
     state.winner = winnerIndex;
 
     const matchDone = _checkMatchOver(state);
@@ -246,18 +272,29 @@ const Engine = (() => {
   }
 
   function _resolveBlockedGame(state) {
-    // Player/team with lowest pip total wins
     const handPips = state.hands.map(hand => hand.reduce((s, t) => s + t.a + t.b, 0));
     const minPips  = Math.min(...handPips);
-    const winnerIndex = handPips.indexOf(minPips);
 
-    // Winner scores the difference between all other hands and their own
-    const totalOtherPips = handPips.reduce((s, p, i) => i === winnerIndex ? s : s + p, 0);
-    const pipsScored = totalOtherPips - minPips;
+    // Find all players tied for lowest pip count
+    const tied = handPips.reduce((acc, p, i) => { if (p === minPips) acc.push(i); return acc; }, []);
 
-    state.roundScores[winnerIndex] += pipsScored;
-    state.matchScores[winnerIndex] += pipsScored;
-    state.roundWins[winnerIndex]++;
+    let winnerIndex;
+    if (tied.length === 1) {
+      winnerIndex = tied[0];
+    } else {
+      // Tie across different teams → team that opened this round wins
+      const openerTeam = _teamSlot(state.roundOpener);
+      const winnerOnOpenerTeam = tied.find(i => _teamSlot(i) === openerTeam);
+      winnerIndex = winnerOnOpenerTeam !== undefined ? winnerOnOpenerTeam : tied[0];
+    }
+
+    // Score = opposing team's combined pips (NOT a difference formula)
+    const pipsScored = _opposingPips(state, winnerIndex);
+    const scoreSlot  = _teamSlot(winnerIndex);
+
+    state.roundScores[scoreSlot] += pipsScored;
+    state.matchScores[scoreSlot] += pipsScored;
+    state.roundWins[scoreSlot]++;
     state.winner = winnerIndex;
 
     const matchDone = _checkMatchOver(state);
@@ -302,6 +339,7 @@ const Engine = (() => {
     const openingPlayer  = _findOpeningPlayer(state.hands, state.players.length);
     state.openingDouble  = _findHighestDouble(state.hands[openingPlayer]);
     state.currentPlayer  = openingPlayer;
+    state.roundOpener    = openingPlayer; // save for blocked-game tie-break
     state.roundNumber++;
     state.winner         = null;
     state.lastMove       = null;

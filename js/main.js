@@ -44,8 +44,11 @@ let SPLASH_IMAGES = [
 const App = {
   mode: '1v1',
   selectedFormat: 'rounds',
-  selectedOpponent: null,
-  selectedPartner: null,
+  selectedOpponent: null,   // opp in 1v1; opp1 in teams
+  selectedOpponent2: null,  // opp2 in teams
+  selectedTeammate: null,   // user's AI partner in teams
+  selectedPartner: null,    // legacy alias (kept for safety)
+  teamsStep: 'teammate',    // 'teammate' | 'opp1' | 'opp2'
   profileChar: null,
   _lastSplash: null,
 
@@ -76,13 +79,24 @@ const App = {
   },
 
   startModeSelect(mode) {
-    this.mode = mode;
-    this.selectedOpponent = null;
-    this.selectedPartner  = null;
+    this.mode              = mode;
+    this.selectedOpponent  = null;
+    this.selectedOpponent2 = null;
+    this.selectedTeammate  = null;
+    this.selectedPartner   = null;
+    this.teamsStep         = 'teammate';
     Music.start(); // first user gesture — safe to start audio here
 
-    const title = document.getElementById('select-title');
-    if (title) title.textContent = mode === 'teams' ? 'Choose Your Opponents' : 'Choose Your Opponent';
+    const title  = document.getElementById('select-title');
+    const stepEl = document.getElementById('teams-step-indicator');
+
+    if (mode === 'teams') {
+      if (title)  title.textContent  = 'Step 1 of 3 · Choose Your Teammate';
+      if (stepEl) { stepEl.textContent = ''; stepEl.classList.remove('hidden'); }
+    } else {
+      if (title)  title.textContent = 'Choose Your Opponent';
+      if (stepEl) stepEl.classList.add('hidden');
+    }
 
     const partnerSection = document.getElementById('partner-section');
     if (partnerSection) partnerSection.classList.add('hidden');
@@ -99,6 +113,21 @@ const App = {
     CHARACTERS.forEach(char => {
       grid.appendChild(this._buildCard(char, false));
     });
+  },
+
+  // Teams grid: repopulate main grid, filtering already-chosen characters
+  _renderTeamsGrid() {
+    const grid = document.getElementById('character-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const exclude = [
+      this.selectedTeammate?.id,
+      this.selectedOpponent?.id,
+      this.selectedOpponent2?.id,
+    ].filter(Boolean);
+    CHARACTERS
+      .filter(c => !exclude.includes(c.id))
+      .forEach(char => grid.appendChild(this._buildCard(char, false)));
   },
 
   _buildCard(char, isPartnerSelect) {
@@ -144,7 +173,8 @@ const App = {
   _selectOpponent(char, cardEl) {
     document.querySelectorAll('#character-grid .character-card').forEach(c => c.classList.remove('selected'));
     cardEl.classList.add('selected');
-    this.selectedOpponent = char;
+    // In teams mode the correct state variable is set inside challengeFromProfile
+    if (this.mode !== 'teams') this.selectedOpponent = char;
     this._showProfile(char);
   },
 
@@ -215,8 +245,16 @@ const App = {
     // Weakness
     document.getElementById('profile-weakness').textContent = char.weakness;
 
-    // Challenge button label
-    document.getElementById('profile-challenge-btn').textContent = `Challenge ${char.name}!`;
+    // Challenge button label — context-aware for teams steps
+    const teamsBtnLabels = {
+      teammate: `Choose ${char.name} as Teammate`,
+      opp1:     `Challenge ${char.name}!`,
+      opp2:     `Challenge ${char.name}!`,
+    };
+    document.getElementById('profile-challenge-btn').textContent =
+      this.mode === 'teams'
+        ? (teamsBtnLabels[this.teamsStep] || `Challenge ${char.name}!`)
+        : `Challenge ${char.name}!`;
 
     // Scroll card back to top and show
     const card = modal.querySelector('.profile-card');
@@ -234,46 +272,133 @@ const App = {
     const char = this.profileChar;
     if (!char) return;
     document.getElementById('profile-modal').classList.add('hidden');
+    this.profileChar = null;
 
-    if (this.mode === 'teams') {
-      this._showPartnerSelect();
-    } else {
+    if (this.mode !== 'teams') {
+      this.selectedOpponent = char;
+      this._showMatchOverlay(char);
+      return;
+    }
+
+    // ── Teams mode: advance through three-step selection ──
+    const title  = document.getElementById('select-title');
+    const stepEl = document.getElementById('teams-step-indicator');
+
+    if (this.teamsStep === 'teammate') {
+      this.selectedTeammate = char;
+      this.teamsStep = 'opp1';
+      if (title)  title.textContent  = 'Step 2 of 3 · Choose Opponent 1';
+      if (stepEl) stepEl.textContent = `🤝 Teammate: ${char.name}`;
+      this._renderTeamsGrid();
+
+    } else if (this.teamsStep === 'opp1') {
+      this.selectedOpponent = char;
+      this.teamsStep = 'opp2';
+      if (title)  title.textContent  = 'Step 3 of 3 · Choose Opponent 2';
+      if (stepEl) stepEl.textContent =
+        `🤝 ${this.selectedTeammate?.name}  ·  ⚔️ Opp 1: ${char.name}`;
+      this._renderTeamsGrid();
+
+    } else if (this.teamsStep === 'opp2') {
+      this.selectedOpponent2 = char;
       this._showMatchOverlay(char);
     }
   },
 
   // ── Match overlay ──────────────────────────────────
-  _showMatchOverlay(opponent) {
+  _showMatchOverlay(_unused) {
     const overlay = document.getElementById('match-overlay');
     if (!overlay) return;
-
-    const img = document.getElementById('overlay-npc-img');
-    img.innerHTML = `<img src="assets/characters/${opponent.portraitFile}" alt="${opponent.name}" onerror="this.src='assets/characters/silhouette.svg'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-
-    document.getElementById('overlay-npc-name').textContent = opponent.name;
+    const card = document.getElementById('match-overlay-card');
+    if (!card) return;
 
     const formatLabels = {
-      rounds:  'First to Empty Hand',
-      points:  'First to 100 Points',
-      bestof3: 'Best of 3 Rounds',
+      rounds:    'Single Match',
+      points:    'Play to 100',
+      points200: 'Play to 200',
     };
-    document.getElementById('overlay-format').textContent =
-      `${this.mode === 'teams' ? '2v2 Teams · ' : '1v1 · '}${formatLabels[this.selectedFormat]}`;
+    const fmtLabel = formatLabels[this.selectedFormat] || this.selectedFormat;
+
+    if (this.mode === 'teams') {
+      const tm  = this.selectedTeammate;
+      const op1 = this.selectedOpponent;
+      const op2 = this.selectedOpponent2;
+      const ring = (char, label) => char
+        ? `<div class="overlay-portrait-ring npc small"><img src="assets/characters/${char.portraitFile}" alt="${char.name}" onerror="this.src='assets/characters/silhouette.svg'"></div>`
+        : `<div class="overlay-portrait-ring you small">${label}</div>`;
+
+      card.innerHTML = `
+        <div class="overlay-vs-row">
+          <div class="overlay-team">
+            <div class="overlay-team-portraits">
+              <div class="overlay-portrait-ring you small">YOU</div>
+              ${ring(tm, 'TM')}
+            </div>
+            <div class="overlay-team-name">${tm?.name || 'Partner'}</div>
+          </div>
+          <div class="overlay-vs">VS</div>
+          <div class="overlay-team">
+            <div class="overlay-team-portraits">
+              ${ring(op1, 'O1')}
+              ${ring(op2, 'O2')}
+            </div>
+            <div class="overlay-team-name">${op1?.name || 'Opp 1'} + ${op2?.name || 'Opp 2'}</div>
+          </div>
+        </div>
+        <div class="overlay-format">2v2 Teams · ${fmtLabel}</div>
+        <button class="btn-primary" onclick="App.launchGame()">Let's Play!</button>
+        <button class="btn-secondary" onclick="App.cancelOverlay()">Change Lineup</button>
+      `;
+    } else {
+      const opponent = this.selectedOpponent;
+      card.innerHTML = `
+        <div class="overlay-vs-row">
+          <div class="overlay-player">
+            <div class="overlay-portrait-ring you">YOU</div>
+          </div>
+          <div class="overlay-vs">VS</div>
+          <div class="overlay-player">
+            <div class="overlay-portrait-ring npc">
+              <img src="assets/characters/${opponent?.portraitFile}" alt="${opponent?.name}" onerror="this.src='assets/characters/silhouette.svg'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+            </div>
+            <div class="overlay-npc-name">${opponent?.name || 'CPU'}</div>
+          </div>
+        </div>
+        <div class="overlay-format">1v1 · ${fmtLabel}</div>
+        <button class="btn-primary" onclick="App.launchGame()">Let's Play!</button>
+        <button class="btn-secondary" onclick="App.cancelOverlay()">Change Opponent</button>
+      `;
+    }
 
     overlay.classList.remove('hidden');
   },
 
   cancelOverlay() {
     document.getElementById('match-overlay').classList.add('hidden');
+
+    if (this.mode === 'teams') {
+      // Step back to opp2 selection so the user can swap the second opponent
+      this.selectedOpponent2 = null;
+      this.teamsStep = 'opp2';
+      const title  = document.getElementById('select-title');
+      const stepEl = document.getElementById('teams-step-indicator');
+      if (title)  title.textContent  = 'Step 3 of 3 · Choose Opponent 2';
+      if (stepEl) stepEl.textContent =
+        `🤝 ${this.selectedTeammate?.name}  ·  ⚔️ Opp 1: ${this.selectedOpponent?.name}`;
+      this._renderTeamsGrid();
+    }
   },
 
   launchGame() {
     if (!this.selectedOpponent) return;
+    if (this.mode === 'teams' && (!this.selectedTeammate || !this.selectedOpponent2)) return;
+
     const params = new URLSearchParams({
-      mode:     this.mode,
-      opponent: this.selectedOpponent.id,
-      partner:  this.selectedPartner?.id || '',
-      format:   this.selectedFormat,
+      mode:      this.mode,
+      opponent:  this.selectedOpponent.id,
+      partner:   this.selectedTeammate?.id || '',
+      opponent2: this.selectedOpponent2?.id || '',
+      format:    this.selectedFormat,
     });
     window.location.href = `game.html?${params}`;
   },

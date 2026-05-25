@@ -67,11 +67,13 @@
         <h2 id="select-title">Choose Your Opponent</h2>
       </div>
 
+      <p id="teams-step-indicator" class="teams-step-indicator hidden"></p>
+
       <div class="format-bar">
         <span class="format-label">Match Format:</span>
-        <button class="format-btn active" data-format="rounds">First to Empty Hand</button>
-        <button class="format-btn" data-format="points">First to 100 pts</button>
-        <button class="format-btn" data-format="bestof3">Best of 3</button>
+        <button class="format-btn active" data-format="rounds">Single Match</button>
+        <button class="format-btn" data-format="points">Play to 100</button>
+        <button class="format-btn" data-format="points200">Play to 200</button>
       </div>
 
       <div class="character-grid" id="character-grid">
@@ -121,9 +123,9 @@
         </div>
         <div class="rule-card">
           <h3>Match Formats</h3>
-          <p><strong>Round Win:</strong> Single round, winner takes all.<br>
-             <strong>First to 100:</strong> Play multiple rounds; accumulate points until someone hits 100.<br>
-             <strong>Best of 3:</strong> First to win 2 rounds wins the match.</p>
+          <p><strong>Single Match:</strong> One round, winner takes all.<br>
+             <strong>Play to 100:</strong> Accumulate points across rounds until a player or team hits 100.<br>
+             <strong>Play to 200:</strong> Same race but to 200 points — longer, harder-fought matches.</p>
         </div>
       </div>
     </div>
@@ -186,20 +188,8 @@
 
   <!-- ===== Match Start Overlay ===== -->
   <div id="match-overlay" class="match-overlay hidden">
-    <div class="match-overlay-card">
-      <div class="overlay-vs-row">
-        <div class="overlay-player">
-          <div class="overlay-portrait-ring you">YOU</div>
-        </div>
-        <div class="overlay-vs">VS</div>
-        <div class="overlay-player" id="overlay-opponent">
-          <div class="overlay-portrait-ring npc" id="overlay-npc-img"></div>
-          <div class="overlay-npc-name" id="overlay-npc-name"></div>
-        </div>
-      </div>
-      <div class="overlay-format" id="overlay-format"></div>
-      <button class="btn-primary" onclick="App.launchGame()">Let's Play!</button>
-      <button class="btn-secondary" onclick="App.cancelOverlay()">Change Opponent</button>
+    <div class="match-overlay-card" id="match-overlay-card">
+      <!-- Content built dynamically by App._showMatchOverlay() -->
     </div>
   </div>
 

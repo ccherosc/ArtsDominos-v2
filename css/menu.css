@@ -583,6 +583,46 @@
   text-align: center;
 }
 
+/* ===== TEAMS STEP INDICATOR ===== */
+.teams-step-indicator {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--gold);
+  text-align: center;
+  padding: 6px var(--gap-md);
+  letter-spacing: 0.04em;
+  width: 100%;
+  max-width: 900px;
+}
+
+/* ===== TEAMS MATCH OVERLAY ===== */
+.overlay-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-sm);
+}
+
+.overlay-team-portraits {
+  display: flex;
+  gap: 8px;
+}
+
+.overlay-team-name {
+  font-family: var(--font-heading);
+  color: var(--gold-light);
+  font-size: 0.78rem;
+  text-align: center;
+  max-width: 140px;
+}
+
+.overlay-portrait-ring.small {
+  width: 64px;
+  height: 64px;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+}
+
 /* ===== TUTORIAL DIFFICULTY BADGE ===== */
 .diff-badge.tutorial {
   background: rgba(120,144,156,0.2);

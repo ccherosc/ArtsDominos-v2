@@ -15,11 +15,17 @@ function buildPlayers(params) {
   const partner  = params.partner ? CharacterDB.getById(params.partner) : null;
 
   if (params.mode === 'teams' && opponent && partner) {
+    const opponent2 = params.opponent2 ? CharacterDB.getById(params.opponent2) : null;
     return [
-      { id: 'human',       name: 'You',         isHuman: true,  aiStrategy: null },
-      { id: opponent.id,   name: opponent.name,  isHuman: false, aiStrategy: opponent.aiStrategy },
-      { id: 'human_partner', name: partner.name, isHuman: false, aiStrategy: 'random' }, // AI partner
-      { id: opponent.id + '_2', name: 'Opp 2',  isHuman: false, aiStrategy: opponent.aiStrategy },
+      { id: 'human',             name: 'You',           isHuman: true,  aiStrategy: null },
+      { id: opponent.id,         name: opponent.name,   isHuman: false, aiStrategy: opponent.aiStrategy },
+      { id: 'human_partner',     name: partner.name,    isHuman: false, aiStrategy: partner.aiStrategy || 'random' },
+      {
+        id:         opponent2?.id         || opponent.id + '_2',
+        name:       opponent2?.name       || 'Opp 2',
+        isHuman:    false,
+        aiStrategy: opponent2?.aiStrategy || opponent.aiStrategy,
+      },
     ];
   }
 
@@ -40,10 +46,12 @@ const players = buildPlayers(Params);
 
 function _recapInit() {
   const opp = state.players.find(p => !p.isHuman);
-  const fmt = { rounds: 'Single Round', points: 'First to 100 pts', bestof3: 'Best of 3' };
+  const formatLabel = state.format === 'points'
+    ? `Play to ${state.targetPoints}`
+    : ({ rounds: 'Single Match' }[state.format] || state.format);
   _recapData = {
     oppName:     opp?.name || 'CPU',
-    formatLabel: fmt[state.format] || state.format,
+    formatLabel,
     date:        new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     rounds:      [],
   };
@@ -212,11 +220,9 @@ function initGame() {
     if (nameEl) nameEl.textContent = opp.name === 'TBD' ? `Level ${opp.level}` : opp.name;
   }
 
-  document.getElementById('format-badge').textContent = {
-    rounds:  'Single Round',
-    points:  'First to 100 pts',
-    bestof3: 'Best of 3',
-  }[state.format] || '';
+  document.getElementById('format-badge').textContent = state.format === 'points'
+    ? `Play to ${state.targetPoints}`
+    : ({ rounds: 'Single Match' }[state.format] || '');
 
   // V2: set up seat labels and show/hide 4-player side zones
   _initSeats();
@@ -400,9 +406,9 @@ InputEvents.onPassRequest = function() {
 // ── UI refresh ───────────────────────────────────────
 
 function _refreshUI() {
-  // Scores
-  document.getElementById('your-score').textContent    = state.matchScores[0];
-  document.getElementById('opp-score').textContent     = state.matchScores[1] || 0;
+  // Scores are hidden during active play — revealed in round/match-over overlays
+  document.getElementById('your-score').textContent = '—';
+  document.getElementById('opp-score').textContent  = '—';
   document.getElementById('your-hand-count').textContent = state.hands[0].length;
   const oppCount  = state.hands[1]?.length || 0;
   const oppBadge  = document.getElementById('opp-hand-count');
@@ -460,21 +466,33 @@ function _showResult(result) {
     _recapData.rounds[_recapData.rounds.length - 1].result = Scoring.roundResultText(state, result);
   }
 
-  const isMatch = state.status === 'match_over';
+  const isMatch  = state.status === 'match_over';
+  const is4p     = state.players.length === 4;
+
+  // "Won" means Team A (even player indices) won the round or match.
+  // Works for both 2-player (player 0 = you) and teams (players 0 & 2 = your team).
+  const roundWon = result.roundWinner % 2 === 0;
+
+  // ── Score labels ─────────────────────────────────────
+  const myScore  = state.matchScores[0] || 0;
+  const oppScore = state.matchScores[1] || 0;
+  const myLabel  = is4p ? 'Your Team'  : 'You';
+  const oppLabel = is4p ? 'Opp Team'
+                        : (state.players[1]?.name || 'Opponent');
 
   if (isMatch) {
     const summary = Scoring.getMatchSummary(state);
-    const won = summary.winnerIndex === 0;
+    const won = summary.winnerIndex === 0; // Team A slot always index 0
 
     // Record win/loss and play result sound
     const opp = CharacterDB.getById(Params.opponent);
-    if (opp) {
+    if (opp && !is4p) {
       won ? Storage.recordWin(opp.id) : Storage.recordLoss(opp.id);
     }
     setTimeout(() => won ? Sound.win() : Sound.lose(), 300);
 
     // Update global cumulative stats and submit to leaderboard
-    const matchPoints = state.matchScores[0] || 0;
+    const matchPoints = myScore;
     Storage.addMatchResult(matchPoints, won);
     if (typeof Leaderboard !== 'undefined') {
       const playerName = Storage.getPlayerName();
@@ -484,13 +502,14 @@ function _showResult(result) {
       }
     }
 
-    // Running record vs this opponent (already updated above)
-    const rec     = opp ? Storage.getRecord(opp.id) : null;
-    const streak  = rec ? (rec.streak || 0) : 0;
-    const recStr  = rec ? `  ·  ${opp.name}: ${rec.wins}W – ${rec.losses}L` : '';
+    // Streak / record suffix (2-player only)
+    const rec       = (!is4p && opp) ? Storage.getRecord(opp.id) : null;
+    const streak    = rec ? (rec.streak || 0) : 0;
+    const recStr    = rec ? `  ·  ${opp.name}: ${rec.wins}W – ${rec.losses}L` : '';
     const streakStr = won && streak >= 2
       ? `  ·  ${streak} wins in a row!`
-      : (!won && rec && rec.bestStreak >= 2 && streak === 0 ? `  ·  streak ended at ${rec.bestStreak}` : '');
+      : (!won && rec && rec.bestStreak >= 2 && streak === 0
+          ? `  ·  streak ended at ${rec.bestStreak}` : '');
 
     // Character portrait
     const portraitWrap  = document.getElementById('match-result-portrait');
@@ -505,17 +524,21 @@ function _showResult(result) {
     if (portraitBadge) portraitBadge.textContent = won ? '🏆' : '😔';
 
     document.getElementById('match-result-title').textContent = won
-      ? 'You Win the Match!'
-      : `${opp?.name ?? 'Opponent'} Wins!`;
-    document.getElementById('match-result-detail').textContent   = Scoring.roundResultText(state, result) + streakStr;
+      ? (is4p ? 'Your Team Wins the Match!' : 'You Win the Match!')
+      : (is4p ? 'Opponent Team Wins!'        : `${opp?.name ?? 'Opponent'} Wins!`);
+    document.getElementById('match-result-detail').textContent    = Scoring.roundResultText(state, result) + streakStr;
     document.getElementById('match-result-breakdown').textContent = Scoring.pipBreakdownText(state, result);
-    document.getElementById('match-result-scores').textContent   =
-      `You: ${state.matchScores[0]} pts · ${state.players[1]?.name}: ${state.matchScores[1] || 0} pts${recStr}`;
+    document.getElementById('match-result-scores').textContent    =
+      `${myLabel}: ${myScore} pts · ${oppLabel}: ${oppScore} pts${recStr}`;
 
-    // Fire streak banner
+    // Reveal running score in HUD now that the match is over
+    document.getElementById('your-score').textContent = myScore;
+    document.getElementById('opp-score').textContent  = oppScore;
+
+    // Fire streak banner (2-player only)
     const fireBanner = document.getElementById('streak-fire-banner');
     if (fireBanner) {
-      const tierInfo = won ? _getStreakTier(streak) : null;
+      const tierInfo = (won && !is4p) ? _getStreakTier(streak) : null;
       if (tierInfo) {
         fireBanner.className = `streak-fire-banner tier-${tierInfo.tier}`;
         fireBanner.innerHTML =
@@ -531,14 +554,17 @@ function _showResult(result) {
     document.getElementById('match-over-overlay').classList.remove('hidden');
 
   } else {
-    const won = result.roundWinner === 0;
-    setTimeout(() => won ? Sound.roundWin() : Sound.pass(), 200);
-    document.getElementById('result-icon').textContent      = won ? '🎉' : '😤';
-    document.getElementById('result-title').textContent     = won ? 'Round Won!' : 'Round Lost';
+    setTimeout(() => roundWon ? Sound.roundWin() : Sound.pass(), 200);
+    document.getElementById('result-icon').textContent      = roundWon ? '🎉' : '😤';
+    document.getElementById('result-title').textContent     = roundWon ? 'Round Won!' : 'Round Lost';
     document.getElementById('result-detail').textContent    = Scoring.roundResultText(state, result);
     document.getElementById('result-breakdown').textContent = Scoring.pipBreakdownText(state, result);
     document.getElementById('result-scores').textContent    =
-      `Match Score — You: ${state.matchScores[0]} · ${state.players[1]?.name}: ${state.matchScores[1] || 0}`;
+      `Running Total — ${myLabel}: ${myScore} · ${oppLabel}: ${oppScore}`;
+
+    // Reveal running score in HUD while round-over overlay is showing
+    document.getElementById('your-score').textContent = myScore;
+    document.getElementById('opp-score').textContent  = oppScore;
 
     const nextBtn = document.getElementById('result-next-btn');
     nextBtn.textContent = 'Next Round';
